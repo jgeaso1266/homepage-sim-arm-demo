@@ -15,6 +15,18 @@ import (
 // the Beanjamin config.
 const obstacleModel = "erh:vmodutils:obstacle"
 
+// toolFrameNames is the single source of truth for the arm's tool-chain frames.
+// The frame-system builder mounts these on the arm (see addToolChain), and
+// LoadObstacles excludes any obstacle parented to one of them so the world scene
+// and the tool chain can't drift apart. Keep this in sync with the frames built
+// in addToolChain.
+var toolFrameNames = map[string]bool{
+	"gripper":             true,
+	"filter":              true,
+	"portafilter-handle":  true,
+	"coffee-claws-middle": true,
+}
+
 // Obstacle is a single static obstacle frame from the machine config, parented
 // in the world scene (never on the arm's tool chain).
 type Obstacle struct {
@@ -54,21 +66,30 @@ func LoadObstacles(configPath string) (map[string]Obstacle, error) {
 			continue
 		}
 		fr := comp.Frame
-		if fr.Parent == "gripper" || fr.Parent == "filter" {
+		if toolFrameNames[fr.Parent] {
 			continue // gripper-attached tool chain, handled elsewhere
 		}
 
-		geom, ok := resolveGeometry(fr.Geometry, vars, comp.Name)
-		if !ok {
-			continue // no geometry, or an unresolved $variable geometry
+		geom, ok, err := resolveGeometry(fr.Geometry, vars, comp.Name)
+		if err != nil {
+			return nil, fmt.Errorf("obstacle %q: %w", comp.Name, err)
 		}
-		translation, ok := resolveVector(fr.Translation, vars)
 		if !ok {
-			continue // unresolved $variable translation
+			continue // no geometry on this frame
 		}
-		orientation, ok := resolveOrientation(fr.Orientation, vars)
+		translation, ok, err := resolveVector(fr.Translation, vars, comp.Name)
+		if err != nil {
+			return nil, fmt.Errorf("obstacle %q: %w", comp.Name, err)
+		}
 		if !ok {
-			continue // unresolved $variable orientation
+			continue // no translation on this frame
+		}
+		orientation, ok, err := resolveOrientation(fr.Orientation, vars, comp.Name)
+		if err != nil {
+			return nil, fmt.Errorf("obstacle %q: %w", comp.Name, err)
+		}
+		if !ok {
+			continue // no orientation on this frame
 		}
 
 		obstacles[comp.Name] = Obstacle{
@@ -109,15 +130,24 @@ func LoadToolFrame(configPath, name string) (Obstacle, error) {
 			return Obstacle{}, fmt.Errorf("tool frame %q has no frame", name)
 		}
 		fr := comp.Frame
-		geom, ok := resolveGeometry(fr.Geometry, vars, comp.Name)
+		geom, ok, err := resolveGeometry(fr.Geometry, vars, comp.Name)
+		if err != nil {
+			return Obstacle{}, fmt.Errorf("tool frame %q: %w", name, err)
+		}
 		if !ok {
 			return Obstacle{}, fmt.Errorf("tool frame %q has no resolvable geometry", name)
 		}
-		translation, ok := resolveVector(fr.Translation, vars)
+		translation, ok, err := resolveVector(fr.Translation, vars, comp.Name)
+		if err != nil {
+			return Obstacle{}, fmt.Errorf("tool frame %q: %w", name, err)
+		}
 		if !ok {
 			return Obstacle{}, fmt.Errorf("tool frame %q has no resolvable translation", name)
 		}
-		orientation, ok := resolveOrientation(fr.Orientation, vars)
+		orientation, ok, err := resolveOrientation(fr.Orientation, vars, comp.Name)
+		if err != nil {
+			return Obstacle{}, fmt.Errorf("tool frame %q: %w", name, err)
+		}
 		if !ok {
 			return Obstacle{}, fmt.Errorf("tool frame %q has no resolvable orientation", name)
 		}
@@ -191,11 +221,17 @@ type geometry struct {
 }
 
 // resolveRaw returns the concrete JSON for a frame field, following a
-// {"$variable": {"name": ...}} reference into the variables map. It reports
-// false when the field references a variable that has no binding.
-func resolveRaw(raw json.RawMessage, vars map[string]json.RawMessage) (json.RawMessage, bool) {
+// {"$variable": {"name": ...}} reference into the variables map.
+//
+// A nil result with a nil error means the field is absent (caller may legitimately
+// skip it). When the field references a $variable that has no binding in this
+// merged config it returns an error rather than nil/false: a silently-dropped
+// reference would mean a missing collision volume, so unresolved variables must
+// fail loudly. This branch guards future config re-exports; the committed config
+// is fully resolved and should not trigger it.
+func resolveRaw(raw json.RawMessage, vars map[string]json.RawMessage, label string) (json.RawMessage, error) {
 	if len(raw) == 0 {
-		return nil, false
+		return nil, nil
 	}
 	var ref struct {
 		Variable *struct {
@@ -204,66 +240,85 @@ func resolveRaw(raw json.RawMessage, vars map[string]json.RawMessage) (json.RawM
 	}
 	if err := json.Unmarshal(raw, &ref); err == nil && ref.Variable != nil {
 		bound, ok := vars[ref.Variable.Name]
-		return bound, ok
+		if !ok {
+			return nil, fmt.Errorf("unresolved $variable %q referenced by %q", ref.Variable.Name, label)
+		}
+		return bound, nil
 	}
-	return raw, true
+	return raw, nil
 }
 
-func resolveVector(raw json.RawMessage, vars map[string]json.RawMessage) (r3.Vector, bool) {
-	resolved, ok := resolveRaw(raw, vars)
-	if !ok {
-		return r3.Vector{}, false
+func resolveVector(raw json.RawMessage, vars map[string]json.RawMessage, label string) (r3.Vector, bool, error) {
+	resolved, err := resolveRaw(raw, vars, label)
+	if err != nil {
+		return r3.Vector{}, false, err
+	}
+	if resolved == nil {
+		return r3.Vector{}, false, nil
 	}
 	var v vector
 	if err := json.Unmarshal(resolved, &v); err != nil {
-		return r3.Vector{}, false
+		return r3.Vector{}, false, nil
 	}
-	return r3.Vector{X: v.X, Y: v.Y, Z: v.Z}, true
+	return r3.Vector{X: v.X, Y: v.Y, Z: v.Z}, true, nil
 }
 
-func resolveOrientation(raw json.RawMessage, vars map[string]json.RawMessage) (spatialmath.Orientation, bool) {
-	resolved, ok := resolveRaw(raw, vars)
-	if !ok {
-		return nil, false
+func resolveOrientation(raw json.RawMessage, vars map[string]json.RawMessage, label string) (spatialmath.Orientation, bool, error) {
+	resolved, err := resolveRaw(raw, vars, label)
+	if err != nil {
+		return nil, false, err
+	}
+	if resolved == nil {
+		return nil, false, nil
 	}
 	var o struct {
+		Type  string           `json:"type"`
 		Value orientationValue `json:"value"`
 	}
 	if err := json.Unmarshal(resolved, &o); err != nil {
-		return nil, false
+		return nil, false, nil
+	}
+	// Only ov_degrees is understood. An empty type is treated as ov_degrees
+	// (the config default); any other type would be silently misinterpreted as
+	// OrientationVectorDegrees, so reject it loudly.
+	if o.Type != "" && o.Type != "ov_degrees" {
+		return nil, false, fmt.Errorf("unsupported orientation type %q for %q", o.Type, label)
 	}
 	return &spatialmath.OrientationVectorDegrees{
 		OX:    o.Value.X,
 		OY:    o.Value.Y,
 		OZ:    o.Value.Z,
 		Theta: o.Value.Th,
-	}, true
+	}, true, nil
 }
 
-func resolveGeometry(raw json.RawMessage, vars map[string]json.RawMessage, label string) (spatialmath.Geometry, bool) {
-	resolved, ok := resolveRaw(raw, vars)
-	if !ok {
-		return nil, false
+func resolveGeometry(raw json.RawMessage, vars map[string]json.RawMessage, label string) (spatialmath.Geometry, bool, error) {
+	resolved, err := resolveRaw(raw, vars, label)
+	if err != nil {
+		return nil, false, err
+	}
+	if resolved == nil {
+		return nil, false, nil
 	}
 	var g geometry
 	if err := json.Unmarshal(resolved, &g); err != nil {
-		return nil, false
+		return nil, false, nil
 	}
 
 	switch g.Type {
 	case "box":
 		geom, err := spatialmath.NewBox(spatialmath.NewZeroPose(), r3.Vector{X: g.X, Y: g.Y, Z: g.Z}, label)
 		if err != nil {
-			return nil, false
+			return nil, false, nil
 		}
-		return geom, true
+		return geom, true, nil
 	case "sphere":
 		geom, err := spatialmath.NewSphere(spatialmath.NewZeroPose(), g.R, label)
 		if err != nil {
-			return nil, false
+			return nil, false, nil
 		}
-		return geom, true
+		return geom, true, nil
 	default:
-		return nil, false
+		return nil, false, nil
 	}
 }

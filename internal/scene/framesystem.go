@@ -38,6 +38,20 @@ func BuildFrameSystem(armName, modelPath, configPath string) (*referenceframe.Fr
 
 // addToolChain mounts the gripper/filter/portafilter tool stack on the arm model.
 func addToolChain(fs *referenceframe.FrameSystem, model referenceframe.Frame, configPath string) error {
+	// The frames built below must exactly match the shared tool-frame set that
+	// LoadObstacles uses to exclude tool-chain frames from the world scene. Guard
+	// against the two drifting: if a frame is added/removed here it must also be
+	// reflected in toolFrameNames, and vice-versa.
+	built := []string{"gripper", "coffee-claws-middle", "filter", "portafilter-handle"}
+	if len(built) != len(toolFrameNames) {
+		return fmt.Errorf("tool-chain frames %v out of sync with toolFrameNames %v", built, toolFrameNames)
+	}
+	for _, name := range built {
+		if !toolFrameNames[name] {
+			return fmt.Errorf("tool-chain frame %q missing from toolFrameNames", name)
+		}
+	}
+
 	// gripper: z=105 above the flange. This translation is not in the machine
 	// config; it comes from the beanjamin fragment mod. The gripper carries no
 	// own geometry, so the coffee-claws-middle box is added as a separate child.
