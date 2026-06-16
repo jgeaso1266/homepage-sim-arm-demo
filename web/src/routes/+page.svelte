@@ -6,6 +6,7 @@
 	import { StaticProvider } from '$lib/trajectory/StaticProvider'
 	import TrajectoryPlayer from '$lib/trajectory/TrajectoryPlayer.svelte'
 	import { ARMS, type ArmId, type Trajectory } from '$lib/trajectory/types'
+	import CodeDrawer from '$lib/ui/CodeDrawer.svelte'
 
 	const provider = new StaticProvider()
 
@@ -33,21 +34,12 @@
 		arm = which
 		load(which)
 	}
-
-	// A flattering fixed framing of the barista workspace (meters; scene is mm).
-	const cameraPose = {
-		position: [1.6, -1.4, 1.1] as [number, number, number],
-		lookAt: [0.35, -0.2, 0.15] as [number, number, number],
-	}
 </script>
 
 <div class="root">
-	<ViamProvider
-		config={{ defaultOptions: { queries: { staleTime: Infinity } } }}
-		dialConfigs={{}}
-	>
+	<ViamProvider config={{ defaultOptions: { queries: { staleTime: Infinity } } }} dialConfigs={{}}>
 		<!--
-			ViamAppProvider only satisfies the app-client context that the Visualizer's
+			ViamAppProvider only satisfies the app-client context the Visualizer's
 			internal hooks read; with empty credentials and no partID it never connects
 			to app.viam.com. This is a static, client-side replay — no live machine.
 		-->
@@ -55,7 +47,8 @@
 			serviceHost="https://app.viam.com"
 			credentials={{ type: 'api-key', payload: '', authEntity: '' }}
 		>
-			<Visualizer {cameraPose} inputBindingsEnabled={false}>
+			<!-- The baked snapshot carries its own framed SceneCamera. -->
+			<Visualizer inputBindingsEnabled={false}>
 				{#if trajectory}
 					<TrajectoryPlayer {trajectory} bind:playing />
 				{/if}
@@ -66,22 +59,26 @@
 	<div class="overlay">
 		<div class="caption">Same motion code. Different arm.</div>
 
-		<div class="controls">
-			<div class="toggle" role="group" aria-label="Select arm">
-				{#each ARMS as a (a.id)}
-					<button class:active={a.id === arm} disabled={loading} onclick={() => selectArm(a.id)}>
-						{a.label}
-					</button>
-				{/each}
-			</div>
+		<div class="bottom">
+			<CodeDrawer {arm} />
 
-			<button
-				class="brew"
-				disabled={!trajectory || playing || loading}
-				onclick={() => (playing = true)}
-			>
-				{playing ? 'Brewing…' : 'Make coffee'}
-			</button>
+			<div class="controls">
+				<div class="toggle" role="group" aria-label="Select arm">
+					{#each ARMS as a (a.id)}
+						<button class:active={a.id === arm} disabled={loading} onclick={() => selectArm(a.id)}>
+							{a.label}
+						</button>
+					{/each}
+				</div>
+
+				<button
+					class="brew"
+					disabled={!trajectory || playing || loading}
+					onclick={() => (playing = true)}
+				>
+					{playing ? 'Brewing…' : 'Make coffee'}
+				</button>
+			</div>
 		</div>
 	</div>
 </div>
@@ -99,6 +96,7 @@
 	:global(.overflow-hidden.dark\:bg-white > div:not(:has(canvas))) {
 		display: none !important;
 	}
+
 	.overlay {
 		position: absolute;
 		inset: 0;
@@ -114,6 +112,12 @@
 		letter-spacing: 0.01em;
 		color: #f1f5f9;
 		text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+	}
+	.bottom {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.9rem;
 	}
 	.controls {
 		pointer-events: auto;
