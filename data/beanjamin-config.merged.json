@@ -2811,7 +2811,22 @@
   "fragments": [
     {
       "id": "f6e98d80-20a0-4fb6-9cb3-7b527a91ec10",
-      "variables": {}
+      "variables": {
+        "coffee_machine_base_translation": {
+          "x": 740,
+          "y": 0,
+          "z": 0
+        },
+        "coffee_machine_base_orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        }
+      }
     },
     {
       "id": "b511adfa-80ab-4a70-9bd5-fbb14696b17e"
