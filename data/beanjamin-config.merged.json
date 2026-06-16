@@ -1,0 +1,2851 @@
+{
+  "agent": {
+    "version_control": {
+      "viam-server": "dev"
+    },
+    "advanced_settings": {}
+  },
+  "maintenance": {
+    "maintenance_allowed_key": "is_safe",
+    "sensor_name": "rdk:component:sensor/maintenance-sensor"
+  },
+  "components": [
+    {
+      "name": "zoo-camera-storage",
+      "api": "rdk:component:camera",
+      "model": "viam:video:storage",
+      "attributes": {
+        "storage": {
+          "size_gb": 2
+        },
+        "sync": "data-manager",
+        "camera": "zoo-cam"
+      },
+      "depends_on": [
+        "data-manager"
+      ],
+      "ui_folder": {
+        "name": "video"
+      }
+    },
+    {
+      "name": "zoo-cam",
+      "api": "rdk:component:camera",
+      "model": "viam-labs:modular-webcam:webcam",
+      "attributes": {
+        "format": "MJPEG",
+        "frame_rate": 30,
+        "width_px": {
+          "$variable": {
+            "name": "zoo_cam_width_px"
+          }
+        },
+        "device_id": {
+          "$variable": {
+            "name": "zoo_cam_device_id"
+          }
+        },
+        "height_px": {
+          "$variable": {
+            "name": "zoo_cam_height_px"
+          }
+        }
+      },
+      "ui_folder": {
+        "name": "video"
+      }
+    },
+    {
+      "name": "customer-cam",
+      "api": "rdk:component:camera",
+      "model": "viam-labs:modular-webcam:webcam",
+      "attributes": {
+        "width_px": {
+          "$variable": {
+            "name": "customer_cam_width_px"
+          }
+        },
+        "device_id": {
+          "$variable": {
+            "name": "customer_cam_device_id"
+          }
+        },
+        "height_px": {
+          "$variable": {
+            "name": "customer_cam_height_px"
+          }
+        },
+        "format": "MJPEG",
+        "frame_rate": 30
+      },
+      "ui_folder": {
+        "name": "video"
+      }
+    },
+    {
+      "name": "customer-camera-storage",
+      "api": "rdk:component:camera",
+      "model": "viam:video:storage",
+      "attributes": {
+        "camera": "customer-cam",
+        "storage": {
+          "size_gb": 2
+        },
+        "sync": "data-manager"
+      },
+      "depends_on": [
+        "data-manager"
+      ],
+      "ui_folder": {
+        "name": "video"
+      }
+    },
+    {
+      "name": "arm-camera-storage",
+      "api": "rdk:component:camera",
+      "model": "viam:video:storage",
+      "attributes": {
+        "sync": "data-manager",
+        "camera": "cam",
+        "source_name": "color",
+        "storage": {
+          "size_gb": 2
+        }
+      },
+      "depends_on": [
+        "data-manager"
+      ],
+      "log_configuration": {
+        "level": "info"
+      },
+      "ui_folder": {
+        "name": "video"
+      }
+    },
+    {
+      "name": "chessboard",
+      "api": "rdk:component:pose_tracker",
+      "model": "viam:opencv:chessboard",
+      "attributes": {
+        "square_size_mm": 20,
+        "camera_name": "cam",
+        "pattern_size": [
+          8,
+          13
+        ]
+      },
+      "ui_folder": {
+        "name": "calibration"
+      }
+    },
+    {
+      "name": "weather",
+      "api": "rdk:component:sensor",
+      "model": "viam:conversation-bundle:weather-sensor",
+      "attributes": {
+        "unit": "imperial"
+      },
+      "ui_folder": {
+        "name": "voice"
+      }
+    },
+    {
+      "name": "order-events",
+      "api": "rdk:component:sensor",
+      "model": "viam:beanjamin:order-sensor",
+      "attributes": {},
+      "service_configs": [
+        {
+          "type": "data_manager",
+          "attributes": {
+            "capture_methods": [
+              {
+                "method": "Readings",
+                "capture_frequency_hz": 1,
+                "disabled": false,
+                "additional_params": {}
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "table",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "x": 500,
+          "y": 0,
+          "z": -23.6
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 1120,
+          "y": 1520,
+          "z": 32
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "grinder-base",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "$variable": {
+            "name": "grinder_base_translation"
+          }
+        },
+        "orientation": {
+          "$variable": {
+            "name": "grinder_base_orientation"
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 230,
+          "z": 50
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "grinder-mid",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "grinder-base",
+        "translation": {
+          "x": 0,
+          "y": -45,
+          "z": 87
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 140,
+          "z": 130
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "grinder-top",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "grinder-base",
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 290
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 230,
+          "z": 280
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "tamper-base",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "$variable": {
+            "name": "tamper_base_translation"
+          }
+        },
+        "orientation": {
+          "$variable": {
+            "name": "tamper_base_orientation"
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 150,
+          "y": 160,
+          "z": 60
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "tamper-mid",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "tamper-base",
+        "translation": {
+          "x": 0,
+          "y": -51.5,
+          "z": 78
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 150,
+          "y": 57,
+          "z": 95
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "tamper-top",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "tamper-base",
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 197
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 150,
+          "y": 160,
+          "z": 140
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "coffee-machine-base",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "$variable": {
+            "name": "coffee_machine_base_translation"
+          }
+        },
+        "orientation": {
+          "$variable": {
+            "name": "coffee_machine_base_orientation"
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 230,
+          "z": 62
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "coffee-machine-mid",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "coffee-machine-base",
+        "translation": {
+          "x": 0,
+          "y": -60,
+          "z": 95
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 110,
+          "z": 140
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "coffee-machine-top",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "coffee-machine-base",
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 310
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 230,
+          "z": 50
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "filter",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "gripper",
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 220
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "sphere",
+          "r": 35
+        }
+      },
+      "ui_folder": {
+        "name": "hardware"
+      }
+    },
+    {
+      "name": "coffee-machine-buffer-left",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "coffee-machine-top",
+        "translation": {
+          "x": 100,
+          "y": 0,
+          "z": -65
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 10,
+          "y": 230,
+          "z": 167
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "coffee-machine-buffer-front",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "coffee-machine-top",
+        "translation": {
+          "x": 0,
+          "y": 128,
+          "z": -70
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 36,
+          "z": 150
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "coffee-machine-buffer-right",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "coffee-machine-top",
+        "translation": {
+          "x": -100,
+          "y": 0,
+          "z": -65
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 10,
+          "y": 230,
+          "z": 167
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "steamer-buffer-left",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "coffee-machine-mid",
+        "translation": {
+          "x": -90,
+          "y": 75,
+          "z": 0
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 25,
+          "y": 50,
+          "z": 140
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "steamer-buffer-right",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "coffee-machine-mid",
+        "translation": {
+          "x": 90,
+          "y": 75,
+          "z": 0
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 25,
+          "y": 25,
+          "z": 140
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "filter-poses-switch",
+      "api": "rdk:component:switch",
+      "model": "viam:beanjamin:multi-poses-execution-switch",
+      "attributes": {
+        "reference_frame": "world",
+        "component_name": "filter",
+        "motion": "motion",
+        "poses": [
+          {
+            "translation": {
+              "y": 15
+            },
+            "baseline": "grinder_activate",
+            "orientation": {
+              "o_y": -1,
+              "o_z": 0.08,
+              "theta": -180,
+              "o_x": 0
+            },
+            "pose_name": "grinder_approach"
+          },
+          {
+            "pose_value": {
+              "$variable": {
+                "name": "grinder_activate_pose"
+              }
+            },
+            "pose_name": "grinder_activate"
+          },
+          {
+            "orientation": {
+              "o_x": 0,
+              "o_y": -1,
+              "o_z": 0.08,
+              "theta": -180
+            },
+            "pose_name": "decaf_grinder_approach",
+            "translation": {
+              "y": 17.5
+            },
+            "baseline": "decaf_grinder_activate"
+          },
+          {
+            "pose_value": {
+              "$variable": {
+                "name": "decaf_grinder_activate_pose"
+              }
+            },
+            "pose_name": "decaf_grinder_activate"
+          },
+          {
+            "pose_name": "tamper_approach",
+            "translation": {
+              "along_orientation": -120,
+              "z": -20
+            },
+            "baseline": "tamper_activate"
+          },
+          {
+            "pose_name": "tamper_activate",
+            "pose_value": {
+              "$variable": {
+                "name": "tamper_activate_pose"
+              }
+            }
+          },
+          {
+            "translation": {
+              "z": -47.6
+            },
+            "baseline": "coffee_in",
+            "pose_name": "coffee_approach"
+          },
+          {
+            "pose_value": {
+              "$variable": {
+                "name": "coffee_in_pose"
+              }
+            },
+            "pose_name": "coffee_in"
+          },
+          {
+            "pose_name": "coffee_locked_final",
+            "baseline": "coffee_in",
+            "orientation": {
+              "$variable": {
+                "name": "coffee_locked_from_in_orientation"
+              }
+            }
+          },
+          {
+            "pose_name": "home",
+            "pose_value": {
+              "x": 410,
+              "y": 399.58,
+              "z": 120,
+              "o_x": 1,
+              "o_y": 0,
+              "o_z": 0,
+              "theta": -180
+            }
+          },
+          {
+            "baseline": "approach_to_cleaning_scrapper",
+            "orientation": {
+              "o_y": 0,
+              "o_z": 0,
+              "theta": -180,
+              "o_x": 1
+            },
+            "translation": {
+              "along_orientation": -100
+            },
+            "pose_name": "close_to_cleaning"
+          },
+          {
+            "translation": {
+              "z": 72
+            },
+            "baseline": "cleaning_scrapper_active",
+            "pose_name": "approach_to_cleaning_scrapper"
+          },
+          {
+            "pose_name": "cleaning_scrapper_active",
+            "pose_value": {
+              "$variable": {
+                "name": "cleaning_scrapper_active_pose"
+              }
+            }
+          },
+          {
+            "baseline": "cleaning_brush_active",
+            "pose_name": "approach_to_cleaning_brush",
+            "translation": {
+              "z": 72
+            }
+          },
+          {
+            "pose_name": "cleaning_brush_active",
+            "pose_value": {
+              "$variable": {
+                "name": "cleaning_brush_active_pose"
+              }
+            }
+          },
+          {
+            "translation": {
+              "z": -13.5
+            },
+            "baseline": "coffee_in",
+            "pose_name": "coffee_shake"
+          }
+        ]
+      },
+      "ui_folder": {
+        "name": "motion"
+      }
+    },
+    {
+      "name": "tamper-left",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "tamper-base",
+        "translation": {
+          "x": 70,
+          "y": 35,
+          "z": 75
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 20,
+          "y": 85,
+          "z": 95
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "tamper-right",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "tamper-base",
+        "translation": {
+          "x": -70,
+          "y": 35,
+          "z": 75
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 20,
+          "y": 85,
+          "z": 95
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "coffee-claws-middle",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "gripper",
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 90
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 35,
+          "y": 55,
+          "z": 115
+        }
+      },
+      "ui_folder": {
+        "name": "hardware"
+      }
+    },
+    {
+      "name": "coffee-machine-actuation-area",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "coffee-machine-base",
+        "translation": {
+          "x": 0,
+          "y": -10,
+          "z": 150
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 210,
+          "z": 50
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "speaker",
+      "api": "rdk:component:audio_out",
+      "model": "viam:system-audio:speaker",
+      "attributes": {
+        "device_name": {
+          "$variable": {
+            "name": "device_name"
+          }
+        },
+        "num_channels": 2,
+        "sample_rate": 48000,
+        "volume": 100
+      },
+      "ui_folder": {
+        "name": "voice"
+      }
+    },
+    {
+      "name": "portafilter-handle",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "filter",
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": -107.5
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 35,
+          "y": 47,
+          "z": 145
+        }
+      },
+      "ui_folder": {
+        "name": "hardware"
+      }
+    },
+    {
+      "name": "claws-position-switch",
+      "api": "rdk:component:switch",
+      "model": "viam:beanjamin:multi-poses-execution-switch",
+      "attributes": {
+        "component_name": "coffee-claws-middle",
+        "motion": "motion",
+        "poses": [
+          {
+            "baseline": "coffee_button_on",
+            "pose_name": "coffee_button_approach",
+            "translation": {
+              "x": -33
+            }
+          },
+          {
+            "pose_value": {
+              "$variable": {
+                "name": "coffee_button_on_pose"
+              }
+            },
+            "pose_name": "coffee_button_on"
+          },
+          {
+            "baseline": "coffee_button_on",
+            "pose_name": "coffee_button_off",
+            "translation": {
+              "x": -0.5,
+              "z": 20
+            }
+          },
+          {
+            "pose_name": "filter_released",
+            "translation": {
+              "along_orientation": -135
+            },
+            "baseline": "coffee_locked_final"
+          },
+          {
+            "pose_name": "coffee_locked_final",
+            "pose_value": {
+              "$variable": {
+                "name": "coffee_locked_final_claw_pose"
+              }
+            }
+          },
+          {
+            "pose_name": "empty_cup_approach",
+            "translation": {
+              "z": 60
+            },
+            "baseline": "empty_cup"
+          },
+          {
+            "pose_value": {
+              "$variable": {
+                "name": "empty_cup_pose"
+              }
+            },
+            "pose_name": "empty_cup"
+          },
+          {
+            "pose_value": {
+              "$variable": {
+                "name": "cup_ready_for_coffee_pose"
+              }
+            },
+            "pose_name": "cup_ready_for_coffee"
+          },
+          {
+            "baseline": "cup_ready_for_coffee",
+            "pose_name": "cup_under_machine_approach",
+            "translation": {
+              "along_orientation": -146.3,
+              "z": 3.5
+            }
+          },
+          {
+            "pose_name": "cup_observe",
+            "pose_value": {
+              "$variable": {
+                "name": "cup_observe_pose"
+              }
+            }
+          },
+          {
+            "pose_name": "staging",
+            "pose_value": {
+              "$variable": {
+                "name": "staging-area"
+              }
+            }
+          },
+          {
+            "pose_name": "staging_approach",
+            "translation": {
+              "z": 100
+            },
+            "baseline": "staging"
+          },
+          {
+            "translation": {
+              "z": 120
+            },
+            "baseline": "staging",
+            "pose_name": "pour_approach"
+          },
+          {
+            "baseline": "staging",
+            "orientation": {
+              "o_x": 0,
+              "o_y": 1,
+              "o_z": 0,
+              "theta": -60
+            },
+            "pose_name": "pour",
+            "translation": {
+              "z": 120
+            }
+          }
+        ],
+        "reference_frame": "world"
+      },
+      "ui_folder": {
+        "name": "motion"
+      }
+    },
+    {
+      "name": "empty-cup",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "$variable": {
+            "name": "stream_deck_translation"
+          }
+        },
+        "orientation": {
+          "$variable": {
+            "name": "stream_deck_orientation"
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 75,
+          "y": 75,
+          "z": 75
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "arm-mount",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": -3.8
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 133,
+          "y": 182,
+          "z": 7.6
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "cleaner-base",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "$variable": {
+            "name": "cleaner_base_translation"
+          }
+        },
+        "orientation": {
+          "$variable": {
+            "name": "cleaner_base_orientation"
+          }
+        },
+        "geometry": {
+          "$variable": {
+            "name": "cleaner_base_geometry"
+          }
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "cleaner-back",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "cleaner-base",
+        "translation": {
+          "x": 60,
+          "y": 0,
+          "z": 107
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 1,
+          "y": 235,
+          "z": 64
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "cleaner-front",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "cleaner-base",
+        "translation": {
+          "x": -60,
+          "y": 0,
+          "z": 100
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 1,
+          "y": 235,
+          "z": 50
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "cleaner-left",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "cleaner-base",
+        "translation": {
+          "x": 0,
+          "y": 105,
+          "z": 107
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 120,
+          "y": 30,
+          "z": 64
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "cleaner-right",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "cleaner-base",
+        "translation": {
+          "x": 0,
+          "y": -105,
+          "z": 107
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 120,
+          "y": 30,
+          "z": 64
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "cleaner-top",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "cleaner-base",
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 140
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 120,
+          "y": 235,
+          "z": 1
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "maintenance-sensor",
+      "api": "rdk:component:sensor",
+      "model": "viam:beanjamin:maintenance-sensor",
+      "attributes": {
+        "arm_name": "arm",
+        "coffee_service_name": "coffee-lifecycle"
+      }
+    },
+    {
+      "name": "stream-deck-obstacle",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "$variable": {
+            "name": "stream_deck_translation"
+          }
+        },
+        "orientation": {
+          "$variable": {
+            "name": "stream_deck_orientation"
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 110,
+          "y": 75,
+          "z": 100
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "zoo-cam-obstacle",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "$variable": {
+            "name": "zoo_cam_translation"
+          }
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 50,
+          "y": 50,
+          "z": 550
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "speaker-obstacle",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "x": 100,
+          "y": 100,
+          "z": 0
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": -45
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 35,
+          "z": 40
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "decaf-grinder-base",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "$variable": {
+            "name": "decaf_grinder_base_translation"
+          }
+        },
+        "orientation": {
+          "$variable": {
+            "name": "decaf_grinder_base_orientation"
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 230,
+          "z": 50
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "decaf-grinder-mid",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "decaf-grinder-base",
+        "translation": {
+          "x": 0,
+          "y": -45,
+          "z": 87
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 140,
+          "z": 130
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "decaf-grinder-top",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "decaf-grinder-base",
+        "translation": {
+          "x": 0,
+          "y": 0,
+          "z": 290
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 200,
+          "y": 230,
+          "z": 280
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "wall",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "x": -500,
+          "y": 0,
+          "z": 0
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 10,
+          "y": 2000,
+          "z": 2000
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    },
+    {
+      "name": "mic",
+      "api": "rdk:component:audio_in",
+      "model": "viam:system-audio:microphone",
+      "attributes": {
+        "num_channels": 1,
+        "device_id": {
+          "$variable": {
+            "name": "mic_device_id"
+          }
+        }
+      },
+      "ui_folder": {
+        "name": "voice"
+      }
+    },
+    {
+      "name": "ceiling",
+      "api": "rdk:component:gripper",
+      "model": "erh:vmodutils:obstacle",
+      "attributes": {},
+      "frame": {
+        "parent": "world",
+        "translation": {
+          "x": 500,
+          "y": 0,
+          "z": 900
+        },
+        "orientation": {
+          "type": "ov_degrees",
+          "value": {
+            "x": 0,
+            "y": 0,
+            "z": 1,
+            "th": 0
+          }
+        },
+        "geometry": {
+          "type": "box",
+          "x": 1120,
+          "y": 1520,
+          "z": 32
+        }
+      },
+      "ui_folder": {
+        "name": "obstacles"
+      }
+    }
+  ],
+  "services": [
+    {
+      "name": "realsense-discovery",
+      "api": "rdk:service:discovery",
+      "model": "viam:realsense:discovery",
+      "attributes": {},
+      "ui_folder": {
+        "name": "video"
+      }
+    },
+    {
+      "name": "video-store-mux",
+      "api": "rdk:service:generic",
+      "model": "viam:multiplexer:resource-multiplexer",
+      "attributes": {
+        "dependencies": [
+          "customer-camera-storage",
+          "zoo-camera-storage",
+          "arm-camera-storage"
+        ]
+      },
+      "depends_on": [
+        "customer-camera-storage",
+        "zoo-camera-storage",
+        "arm-camera-storage"
+      ],
+      "ui_folder": {
+        "name": "video"
+      }
+    },
+    {
+      "name": "webcam-discovery",
+      "api": "rdk:service:discovery",
+      "model": "viam:find-webcams:webcam-discovery",
+      "attributes": {},
+      "ui_folder": {
+        "name": "video"
+      }
+    },
+    {
+      "name": "hand-eye-calibration",
+      "api": "rdk:service:generic",
+      "model": "viam:opencv:hand_eye_calibration",
+      "attributes": {
+        "pose_tracker": "chessboard",
+        "sleep_seconds": 2,
+        "arm_name": "arm",
+        "body_name": "corner_1",
+        "calibration_type": "eye-in-hand",
+        "method": "CALIB_HAND_EYE_TSAI",
+        "motion": "motion",
+        "use_motion_service_for_poses": true
+      },
+      "ui_folder": {
+        "name": "calibration"
+      }
+    },
+    {
+      "name": "voice-command",
+      "api": "rdk:service:generic",
+      "model": "viam:conversation-bundle:voice-command",
+      "attributes": {
+        "llm_model": "claude-opus-4-7",
+        "google_credentials_json": {
+          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/beanjamin-tts%40engineering-tools-310515.iam.gserviceaccount.com",
+          "client_email": "REDACTED",
+          "private_key_id": "REDACTED",
+          "private_key": "REDACTED",
+          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+          "project_id": "engineering-tools-310515",
+          "token_uri": "https://oauth2.googleapis.com/token",
+          "universe_domain": "googleapis.com",
+          "client_id": "REDACTED",
+          "type": "service_account"
+        },
+        "sensors": [
+          {
+            "description": "Live outdoor weather for the shop's location in NYC \u2014 temperature (\u00b0F), humidity (%), wind speed (mph), and a plain-English condition like \"Partly cloudy\" or \"Light rain\".",
+            "name": "weather"
+          }
+        ],
+        "audio_in": "mic",
+        "text_to_speech": "voice-command-speech",
+        "listen_timeout_sec": 11,
+        "anthropic_api_key": "sk-ant-REDACTED",
+        "conversation_end_cue": "Moving along",
+        "wake_word": {
+          "$variable": {
+            "name": "wake_word"
+          }
+        },
+        "command_status": {
+          "description": "coffee machine queue state. `count` is the number of orders still pending (not yet complete). `orders[]` lists pending orders first, then any just-completed ones; each entry has `customer_name`, `drink`, `raw_step` (current step label, empty before start), and `completed_at` (empty string while pending, RFC3339 timestamp once done). `is_busy` is true while the machine is actively preparing a drink. `is_paused` is true when the queue is waiting on an operator 'proceed' (e.g. after a manual cancel or inter-order cleanup pause). Treat the most recently dispatched command as in progress while `is_busy` is true or `count` > 0; treat it as finished when both are false and the latest entry in `orders[]` has a non-empty `completed_at`.",
+          "resource": "coffee-lifecycle"
+        },
+        "wake_cooldown_sec": 3,
+        "commands": [
+          {
+            "resource": "coffee-lifecycle",
+            "arguments_hint": "Set arguments.prepare_order.customer_name to the customer's name once they tell you. If the customer asked for multiple of this drink (e.g. 'three espressos'), set arguments.prepare_order.count to that integer; default 1. Don't invent or guess values.",
+            "description": "Customer ordered a standard espresso.",
+            "do_command": {
+              "prepare_order": {
+                "drink": "espresso"
+              }
+            },
+            "name": "order_espresso",
+            "required_arguments": [
+              "prepare_order.customer_name"
+            ]
+          },
+          {
+            "required_arguments": [
+              "prepare_order.customer_name"
+            ],
+            "resource": "coffee-lifecycle",
+            "arguments_hint": "Set arguments.prepare_order.customer_name to the customer's name once they tell you. If the customer asked for multiple of this drink (e.g. 'three lungos'), set arguments.prepare_order.count to that integer; default 1. Don't invent or guess values.",
+            "description": "Customer ordered a lungo (a long espresso).",
+            "do_command": {
+              "prepare_order": {
+                "drink": "lungo"
+              }
+            },
+            "name": "order_lungo"
+          },
+          {
+            "description": "Customer ordered a decaf espresso.",
+            "do_command": {
+              "prepare_order": {
+                "drink": "decaf"
+              }
+            },
+            "name": "order_decaf",
+            "required_arguments": [
+              "prepare_order.customer_name"
+            ],
+            "resource": "coffee-lifecycle",
+            "arguments_hint": "Set arguments.prepare_order.customer_name to the customer's name once they tell you. If the customer asked for multiple of this drink (e.g. 'three decafs'), set arguments.prepare_order.count to that integer; default 1. Don't invent or guess values."
+          },
+          {
+            "name": "order_decaf_lungo",
+            "required_arguments": [
+              "prepare_order.customer_name"
+            ],
+            "resource": "coffee-lifecycle",
+            "arguments_hint": "Set arguments.prepare_order.customer_name to the customer's name once they tell you. If the customer asked for multiple of this drink (e.g. 'three decaf lungos'), set arguments.prepare_order.count to that integer; default 1. Don't invent or guess values.",
+            "description": "Customer ordered a decaf lungo (a long decaf espresso).",
+            "do_command": {
+              "prepare_order": {
+                "drink": "decaf_lungo"
+              }
+            }
+          },
+          {
+            "description": "Customer asked to cancel their current order.",
+            "do_command": {
+              "cancel": true
+            },
+            "name": "cancel",
+            "resource": "coffee-lifecycle"
+          }
+        ],
+        "language_code": "en-US",
+        "max_utterance_words": 5,
+        "system_prompt": {
+          "$variable": {
+            "name": "voice_command_system_prompt"
+          }
+        },
+        "max_tokens": 512
+      },
+      "ui_folder": {
+        "name": "voice"
+      }
+    },
+    {
+      "name": "audio-discovery",
+      "api": "rdk:service:discovery",
+      "model": "viam:system-audio:discovery",
+      "attributes": {},
+      "ui_folder": {
+        "name": "voice"
+      }
+    },
+    {
+      "name": "speech",
+      "api": "rdk:service:generic",
+      "model": "viam:conversation-bundle:text-to-speech",
+      "attributes": {
+        "language_code": "en-US",
+        "voice_name": "en-US-Neural2-A",
+        "audio_out": "speaker",
+        "google_credentials_json": {
+          "client_email": "REDACTED",
+          "private_key": "REDACTED",
+          "token_uri": "https://oauth2.googleapis.com/token",
+          "type": "service_account",
+          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/beanjamin-tts%40engineering-tools-310515.iam.gserviceaccount.com",
+          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+          "client_id": "REDACTED",
+          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+          "universe_domain": "googleapis.com",
+          "private_key_id": "REDACTED",
+          "project_id": "engineering-tools-310515"
+        }
+      },
+      "ui_folder": {
+        "name": "voice"
+      }
+    },
+    {
+      "name": "customer-detector",
+      "api": "rdk:service:generic",
+      "model": "viam:beanjamin:customer-detector",
+      "attributes": {
+        "camera_name": "customer-cam",
+        "confidence_threshold": 0.6,
+        "data_dir": "/.viam/customer-data",
+        "vision_service_name": "face-identification"
+      }
+    },
+    {
+      "name": "face-identification",
+      "api": "rdk:service:vision",
+      "model": "viam:vision:face-identification",
+      "attributes": {
+        "camera_name": "customer-cam",
+        "picture_directory": "/.viam/customer-data/known_faces"
+      }
+    },
+    {
+      "name": "stream-deck",
+      "api": "rdk:service:generic",
+      "model": "erh:viam-streamdeck:streamdeck-original",
+      "attributes": {
+        "pages": {
+          "actions": [
+            {
+              "text": "grind coffee",
+              "args": [
+                {
+                  "execute_action": "grind_coffee"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 1,
+              "method": "do_command"
+            },
+            {
+              "key": 2,
+              "method": "do_command",
+              "text": "tamp ground",
+              "args": [
+                {
+                  "execute_action": "tamp_ground"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle"
+            },
+            {
+              "method": "do_command",
+              "text": "lock",
+              "args": [
+                {
+                  "execute_action": "lock_portafilter"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 3
+            },
+            {
+              "method": "do_command",
+              "text": "release",
+              "args": [
+                {
+                  "execute_action": "release_filter"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 4
+            },
+            {
+              "key": 5,
+              "method": "do_command",
+              "text": "place cup",
+              "args": [
+                {
+                  "execute_action": "set_cup_for_coffee"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle"
+            },
+            {
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 6,
+              "method": "do_command",
+              "text": "brew",
+              "args": [
+                {
+                  "execute_action": "brew_coffee"
+                }
+              ]
+            },
+            {
+              "text": "give order",
+              "args": [
+                {
+                  "execute_action": "give_full_cup_to_customer"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 7,
+              "method": "do_command"
+            },
+            {
+              "method": "do_command",
+              "text": "grab",
+              "args": [
+                {
+                  "execute_action": "grab_filter"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 8
+            },
+            {
+              "text": "unlock",
+              "args": [
+                {
+                  "execute_action": "unlock_portafilter"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 9,
+              "method": "do_command"
+            },
+            {
+              "args": [
+                {
+                  "execute_action": "clean_portafilter"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 10,
+              "method": "do_command",
+              "text": "clean"
+            },
+            {
+              "method": "do_command",
+              "text": "press on",
+              "args": [
+                {
+                  "execute_action": "turn_coffee_button_on"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 11
+            },
+            {
+              "text": "press off",
+              "args": [
+                {
+                  "execute_action": "turn_coffee_button_off"
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 12,
+              "method": "do_command"
+            },
+            {
+              "text": "main page",
+              "args": [
+                {
+                  "set_page": "main"
+                }
+              ],
+              "color": "blue",
+              "component": "stream-deck",
+              "key": 0,
+              "method": "do_command"
+            }
+          ],
+          "claw_sw": [
+            {
+              "text": "main page",
+              "args": [
+                {
+                  "set_page": "main"
+                }
+              ],
+              "color": "blue",
+              "component": "stream-deck",
+              "key": 0,
+              "method": "do_command"
+            },
+            {
+              "args": [
+                {
+                  "set_position_by_name": "filter_released"
+                }
+              ],
+              "color": "orange",
+              "component": "claws-position-switch",
+              "key": 1,
+              "method": "do_command",
+              "text": "filter released"
+            },
+            {
+              "key": 2,
+              "method": "do_command",
+              "text": "locked final",
+              "args": [
+                {
+                  "set_position_by_name": "coffee_locked_final"
+                }
+              ],
+              "color": "orange",
+              "component": "claws-position-switch"
+            },
+            {
+              "text": "btn approach",
+              "args": [
+                {
+                  "set_position_by_name": "coffee_button_approach"
+                }
+              ],
+              "color": "orange",
+              "component": "claws-position-switch",
+              "key": 3,
+              "method": "do_command"
+            },
+            {
+              "color": "orange",
+              "component": "claws-position-switch",
+              "key": 4,
+              "method": "do_command",
+              "text": "btn on",
+              "args": [
+                {
+                  "set_position_by_name": "coffee_button_on"
+                }
+              ]
+            },
+            {
+              "color": "orange",
+              "component": "claws-position-switch",
+              "key": 5,
+              "method": "do_command",
+              "text": "btn off",
+              "args": [
+                {
+                  "set_position_by_name": "coffee_button_off"
+                }
+              ]
+            },
+            {
+              "text": "mach btn appr.",
+              "args": [
+                {
+                  "set_position_by_name": "machine_button_approach"
+                }
+              ],
+              "color": "orange",
+              "component": "claws-position-switch",
+              "key": 6,
+              "method": "do_command"
+            },
+            {
+              "component": "claws-position-switch",
+              "key": 7,
+              "method": "do_command",
+              "text": "mach btn on",
+              "args": [
+                {
+                  "set_position_by_name": "machine_button_on"
+                }
+              ],
+              "color": "orange"
+            },
+            {
+              "method": "do_command",
+              "text": "mach btn off",
+              "args": [
+                {
+                  "set_position_by_name": "machine_button_off"
+                }
+              ],
+              "color": "orange",
+              "component": "claws-position-switch",
+              "key": 8
+            }
+          ],
+          "filter_sw": [
+            {
+              "component": "stream-deck",
+              "key": 0,
+              "method": "do_command",
+              "text": "main page",
+              "args": [
+                {
+                  "set_page": "main"
+                }
+              ],
+              "color": "blue"
+            },
+            {
+              "key": 1,
+              "method": "do_command",
+              "text": "manual OFF",
+              "args": [
+                {
+                  "exit_manual_mode": true
+                }
+              ],
+              "color": "gray",
+              "component": "arm"
+            },
+            {
+              "method": "do_command",
+              "text": "manual ON",
+              "args": [
+                {
+                  "enter_manual_mode": false
+                }
+              ],
+              "color": "gray",
+              "component": "arm",
+              "key": 2
+            },
+            {
+              "color": "red",
+              "component": "filter-poses-switch",
+              "key": 5,
+              "method": "do_command",
+              "text": "grind appr.",
+              "args": [
+                {
+                  "set_position_by_name": "grinder_approach"
+                }
+              ]
+            },
+            {
+              "args": [
+                {
+                  "set_position_by_name": "grinder_activate"
+                }
+              ],
+              "color": "red",
+              "component": "filter-poses-switch",
+              "key": 6,
+              "method": "do_command",
+              "text": "grind active"
+            },
+            {
+              "color": "red",
+              "component": "filter-poses-switch",
+              "key": 7,
+              "method": "do_command",
+              "text": "tamp appr.",
+              "args": [
+                {
+                  "set_position_by_name": "tamper_approach"
+                }
+              ]
+            },
+            {
+              "args": [
+                {
+                  "set_position_by_name": "tamper_activate"
+                }
+              ],
+              "color": "red",
+              "component": "filter-poses-switch",
+              "key": 8,
+              "method": "do_command",
+              "text": "tamp activ."
+            },
+            {
+              "component": "filter-poses-switch",
+              "key": 9,
+              "method": "do_command",
+              "text": "coffee appr.",
+              "args": [
+                {
+                  "set_position_by_name": "coffee_approach"
+                }
+              ],
+              "color": "red"
+            },
+            {
+              "color": "red",
+              "component": "filter-poses-switch",
+              "key": 10,
+              "method": "do_command",
+              "text": "coffee in",
+              "args": [
+                {
+                  "set_position_by_name": "coffee_in"
+                }
+              ]
+            },
+            {
+              "text": "coffee locked final",
+              "args": [
+                {
+                  "set_position_by_name": "coffee_locked_final"
+                }
+              ],
+              "color": "red",
+              "component": "filter-poses-switch",
+              "key": 11,
+              "method": "do_command"
+            }
+          ],
+          "main": [
+            {
+              "text": "NEXT ORDER",
+              "args": [
+                {
+                  "proceed": ""
+                }
+              ],
+              "color": "green",
+              "component": "coffee-lifecycle",
+              "key": 1,
+              "method": "do_command"
+            },
+            {
+              "component": "filter-poses-switch",
+              "key": 9,
+              "method": "do_command",
+              "text": "home",
+              "args": [
+                {
+                  "set_position_by_name": "home"
+                }
+              ],
+              "color": "green"
+            },
+            {
+              "text": "filter sw",
+              "args": [
+                {
+                  "set_page": "filter_sw"
+                }
+              ],
+              "color": "blue",
+              "component": "stream-deck",
+              "key": 10,
+              "method": "do_command"
+            },
+            {
+              "text": "claw sw",
+              "args": [
+                {
+                  "set_page": "claw_sw"
+                }
+              ],
+              "color": "blue",
+              "component": "stream-deck",
+              "key": 11,
+              "method": "do_command"
+            },
+            {
+              "color": "blue",
+              "component": "stream-deck",
+              "key": 12,
+              "method": "do_command",
+              "text": "actions",
+              "args": [
+                {
+                  "set_page": "actions"
+                }
+              ]
+            },
+            {
+              "method": "do_command",
+              "text": "espresso",
+              "args": [
+                {
+                  "prepare_order": {
+                    "drink": "espresso"
+                  }
+                }
+              ],
+              "color": "teal",
+              "component": "coffee-lifecycle",
+              "key": 5
+            },
+            {
+              "text": "espresso lungo",
+              "args": [
+                {
+                  "prepare_order": {
+                    "drink": "lungo"
+                  }
+                }
+              ],
+              "color": "teal",
+              "component": "coffee-lifecycle",
+              "key": 6,
+              "method": "do_command"
+            },
+            {
+              "method": "do_command",
+              "text": "latte",
+              "args": [
+                {
+                  "prepare_order": {
+                    "drink": "latte"
+                  }
+                }
+              ],
+              "color": "teal",
+              "component": "coffee-lifecycle",
+              "key": 7
+            },
+            {
+              "args": [
+                {
+                  "cancel": "true"
+                }
+              ],
+              "color": "purple",
+              "component": "coffee-lifecycle",
+              "key": 0,
+              "method": "do_command",
+              "text": "CANCEL"
+            },
+            {
+              "color": "red",
+              "component": "coffee-lifecycle",
+              "key": 2,
+              "method": "do_command",
+              "text": "clear queue",
+              "args": [
+                {
+                  "clear_queue": "true"
+                }
+              ]
+            },
+            {
+              "color": "orange",
+              "component": "arm",
+              "key": 3,
+              "method": "do_command",
+              "text": "open",
+              "args": [
+                {
+                  "move_gripper": 850,
+                  "setup_gripper": true
+                }
+              ]
+            },
+            {
+              "key": 4,
+              "method": "do_command",
+              "text": "grip",
+              "args": [
+                {
+                  "move_gripper": 0,
+                  "setup_gripper": true
+                }
+              ],
+              "color": "orange",
+              "component": "arm"
+            },
+            {
+              "color": "red",
+              "component": "coffee-lifecycle",
+              "key": 14,
+              "method": "do_command",
+              "text": "Reset World",
+              "args": [
+                {
+                  "reset_world": true
+                }
+              ]
+            }
+          ]
+        },
+        "brightness": 100,
+        "initial_page": "main"
+      }
+    },
+    {
+      "name": "motion",
+      "api": "rdk:service:motion",
+      "model": "rdk:builtin:builtin",
+      "attributes": {
+        "plan_file_path": "${environment.HOME}/.viam/capture",
+        "log_slow_plan_threshold_ms": -1
+      },
+      "ui_folder": {
+        "name": "motion"
+      }
+    },
+    {
+      "name": "coffee-lifecycle",
+      "api": "rdk:service:generic",
+      "model": "viam:beanjamin:coffee",
+      "attributes": {
+        "brew_time_sec": {
+          "$variable": {
+            "name": "brew_time_sec"
+          }
+        },
+        "cam_storage_mux_name": "video-store-mux",
+        "lungo_brew_time_sec": {
+          "$variable": {
+            "name": "lungo_brew_time_sec"
+          }
+        },
+        "arm_name": "arm",
+        "src_camera_name": "cam",
+        "can_serve_decaf": {
+          "$variable": {
+            "name": "can_serve_decaf"
+          }
+        },
+        "save_motion_requests_dir": "${environment.HOME}/.viam/capture",
+        "claws_pose_switcher_name": "claws-position-switch",
+        "place_cup": {
+          "$variable": {
+            "name": "place_cup"
+          }
+        },
+        "clean_after_use": {
+          "$variable": {
+            "name": "clean_after_use"
+          }
+        },
+        "cup_detection_retry_sleep_ms": 250,
+        "portafilter_shake_sec": 2.5,
+        "grind_time_sec": 9,
+        "cup_detection_retries": 3,
+        "motion_service_name": "motion",
+        "speech_service_name": "speech",
+        "gripper_name": "gripper",
+        "conversational": true,
+        "pose_switcher_name": "filter-poses-switch",
+        "cup_centroid_min_z_mm": {
+          "$variable": {
+            "name": "cup_z_min"
+          }
+        },
+        "viz_url": "",
+        "input_range_override": {
+          "arm": {
+            "2": {
+              "min_degs": -218
+            },
+            "5": {
+              "max_degs": 270,
+              "min_degs": -270
+            }
+          }
+        },
+        "cup_vision_service_name": "detection-segmenter",
+        "cup_grab_relative_pose": {
+          "$variable": {
+            "name": "cup_grab_relative_pose"
+          }
+        },
+        "cup_approach_relative_pose": {
+          "$variable": {
+            "name": "cup_approach_relative_pose"
+          }
+        },
+        "data_dir": "/.viam/order-data",
+        "order_sensor_name": "order-events",
+        "dynamic_cup_pickup": {
+          "$variable": {
+            "name": "dynamic_cup_pickup"
+          }
+        }
+      },
+      "log_configuration": {
+        "level": "debug"
+      }
+    },
+    {
+      "name": "shell",
+      "api": "rdk:service:shell",
+      "attributes": {}
+    },
+    {
+      "name": "streamdeck-dials",
+      "api": "rdk:service:generic",
+      "model": "erh:viam-streamdeck:streamdeck-plus",
+      "attributes": {
+        "dials": [
+          {
+            "component": "dial-control",
+            "dial": 0,
+            "command": "dial_move_x"
+          },
+          {
+            "command": "dial_move_y",
+            "component": "dial-control",
+            "dial": 1
+          },
+          {
+            "component": "dial-control",
+            "dial": 2,
+            "command": "dial_move_z"
+          },
+          {
+            "command": "dial_move_orientation",
+            "component": "dial-control",
+            "dial": 3
+          }
+        ],
+        "keys": [
+          {
+            "args": [
+              {
+                "setup_gripper": true,
+                "move_gripper": 850
+              }
+            ],
+            "color": "purple",
+            "component": "arm",
+            "key": 0,
+            "method": "do_command",
+            "text": "Open"
+          },
+          {
+            "args": [
+              {
+                "setup_gripper": true,
+                "move_gripper": 0
+              }
+            ],
+            "color": "purple",
+            "component": "arm",
+            "key": 1,
+            "method": "do_command",
+            "text": "Close"
+          }
+        ]
+      },
+      "ui_folder": {
+        "name": "calibration"
+      }
+    },
+    {
+      "name": "dial-control",
+      "api": "rdk:service:generic",
+      "model": "viam:beanjamin:dial-control-motion",
+      "attributes": {
+        "arm_name": {
+          "$variable": {
+            "name": "arm_name"
+          }
+        }
+      },
+      "ui_folder": {
+        "name": "calibration"
+      }
+    },
+    {
+      "name": "data-manager",
+      "api": "rdk:service:data_manager",
+      "model": "rdk:builtin:builtin",
+      "attributes": {
+        "sync_interval_mins": 0.1,
+        "tags": [],
+        "additional_sync_paths": [],
+        "capture_dir": ""
+      }
+    },
+    {
+      "name": "cup-detector",
+      "api": "rdk:service:vision",
+      "model": "viam-labs:vision:yolov8",
+      "attributes": {
+        "source_name": "color",
+        "model_location": "yolov8n.pt",
+        "task": "detect",
+        "verbose": false,
+        "classes": [
+          "cup",
+          "bowl"
+        ]
+      },
+      "depends_on": [
+        "cam"
+      ],
+      "ui_folder": {
+        "name": "cup detection"
+      }
+    },
+    {
+      "name": "detection-segmenter",
+      "api": "rdk:service:vision",
+      "model": "viam:vision:detections-to-segments",
+      "attributes": {
+        "clustering_radius_mm": 10,
+        "detector_name": "cup-detector",
+        "camera_name": "cam",
+        "mean_k": 5,
+        "sigma": 1.25,
+        "confidence_threshold_pct": 0.5,
+        "depth_threshold_mm": 100,
+        "min_points_in_segment": 50
+      },
+      "ui_folder": {
+        "name": "cup detection"
+      }
+    },
+    {
+      "name": "voice-command-speech",
+      "api": "rdk:service:generic",
+      "model": "viam:conversation-bundle:text-to-speech",
+      "attributes": {
+        "voice_name": {
+          "$variable": {
+            "name": "voice_command_speech_voice_name"
+          }
+        },
+        "audio_out": "speaker",
+        "google_credentials_json": {
+          "token_uri": "https://oauth2.googleapis.com/token",
+          "type": "service_account",
+          "private_key_id": "REDACTED",
+          "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/beanjamin-tts%40engineering-tools-310515.iam.gserviceaccount.com",
+          "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+          "private_key": "REDACTED",
+          "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+          "client_id": "REDACTED",
+          "universe_domain": "googleapis.com",
+          "client_email": "REDACTED",
+          "project_id": "engineering-tools-310515"
+        },
+        "language_code": "en-US"
+      },
+      "ui_folder": {
+        "name": "voice"
+      }
+    }
+  ],
+  "modules": [
+    {
+      "type": "registry",
+      "name": "viam_opencv",
+      "module_id": "viam:opencv",
+      "version": "latest"
+    },
+    {
+      "type": "registry",
+      "name": "erh_vmodutils",
+      "module_id": "erh:vmodutils",
+      "version": "latest"
+    },
+    {
+      "type": "registry",
+      "name": "erh_viam-streamdeck",
+      "module_id": "erh:viam-streamdeck",
+      "version": "latest-with-prerelease"
+    },
+    {
+      "type": "registry",
+      "name": "viam_beanjamin",
+      "module_id": "viam:beanjamin",
+      "version": "latest-with-prerelease",
+      "reload_path": "~/.viam/packages-local/viam_beanjamin_from_reload-module.tar.gz",
+      "reload_enabled": false,
+      "log_level": "debug"
+    },
+    {
+      "type": "registry",
+      "name": "viam_system-audio",
+      "module_id": "viam:system-audio",
+      "version": "latest-with-prerelease"
+    },
+    {
+      "type": "registry",
+      "name": "viam_video-store",
+      "module_id": "viam:video-store",
+      "version": "latest-with-prerelease"
+    },
+    {
+      "type": "registry",
+      "name": "viam_face-identification",
+      "module_id": "viam:face-identification",
+      "version": "latest"
+    },
+    {
+      "type": "registry",
+      "name": "viam-labs_modular-webcam",
+      "module_id": "viam-labs:modular-webcam",
+      "version": "latest"
+    },
+    {
+      "type": "registry",
+      "name": "viam_conversation-bundle",
+      "module_id": "viam:conversation-bundle",
+      "version": "latest"
+    },
+    {
+      "type": "registry",
+      "name": "viam_multiplexer",
+      "module_id": "viam:multiplexer",
+      "version": "latest"
+    },
+    {
+      "type": "registry",
+      "name": "viam_find-webcams",
+      "module_id": "viam:find-webcams",
+      "version": "latest"
+    },
+    {
+      "type": "registry",
+      "name": "viam-labs_YOLOv8",
+      "module_id": "viam-labs:YOLOv8",
+      "version": "latest-with-prerelease"
+    },
+    {
+      "type": "registry",
+      "name": "viam_detections-to-segments",
+      "module_id": "viam:detections-to-segments",
+      "version": "latest"
+    }
+  ],
+  "jobs": [
+    {
+      "name": "pending-videos-cleanup-job",
+      "schedule": "1h",
+      "resource": "coffee-lifecycle",
+      "method": "DoCommand",
+      "command": {
+        "cleanup_pending_clips": true
+      },
+      "log_configuration": {
+        "level": "info"
+      },
+      "ui_folder": {
+        "name": "video"
+      }
+    }
+  ],
+  "fragments": [
+    {
+      "id": "f6e98d80-20a0-4fb6-9cb3-7b527a91ec10",
+      "variables": {}
+    },
+    {
+      "id": "b511adfa-80ab-4a70-9bd5-fbb14696b17e"
+    }
+  ],
+  "description": "### A fragment for the barista bots!\n\nThere are 2 mandatory fragment overrides you must set on your machine:\n1) gripper translation: \"z\": 105 and not 150\n2) arm speed: \"speed_degs_per_sec\": 40, this is not mandatory... but its probably best for safety\n3) on the cam component, assuming its an intel realsense, set   \"align_color_depth\": true\n\n**Obstacles included so far:**\n- Table\n- Grinder\n- Tamper\n- Coffee machine\n- Cleaning machine\n- Zoo-cam\n\n### Variables that can be set:\n**Obstacle frames \u2014 translations & orientations**\n* grinder_base_translation\n* grinder_base_orientation\n* tamper_base_translation\n* tamper_base_orientation\n* coffee_machine_base_translation\n* coffee_machine_base_orientation\n* cleaner_base_translation\n* cleaner_base_orientation\n* cleaner_base_geometry\n* zoo_cam_translation - a good default is: \"x\": 0, \"y\": -740, \"z\": 275\n\n**Filter poses (filter-poses-switch)**\n* grinder_activate_pose\n* tamper_activate_pose\n* coffee_in_pose\n* coffee_locked_from_in_orientation\n* cleaning_brush_active_pose\n* cleaning_scrapper_active_pose\n\n**Claw poses (claws-position-switch)**\n* coffee_button_on_pose\n* coffee_locked_final_claw_pose\n* empty_cup_pose\n* cup_ready_for_coffee_pose",
+  "fragment_mods": [
+    {
+      "mods": [
+        {
+          "$set": {
+            "modules.viam_ufactory.version": "1.1.31-dev.reboot.2"
+          }
+        },
+        {
+          "$set": {
+            "components.arm.attributes.speed_degs_per_sec": 20,
+            "components.arm.attributes.ufactory-studio-proxy": true,
+            "components.arm.log_configuration": {
+              "level": "debug"
+            },
+            "components.arm.attributes.motion": "motion"
+          }
+        },
+        {
+          "$set": {
+            "components.gripper.frame.translation.z": 105,
+            "components.gripper.log_configuration": {
+              "level": "debug"
+            }
+          }
+        }
+      ],
+      "fragment_id": "f6e98d80-20a0-4fb6-9cb3-7b527a91ec10"
+    }
+  ]
+}
