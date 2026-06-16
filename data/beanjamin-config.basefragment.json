@@ -35,9 +35,21 @@
       "attributes": {
         "format": "MJPEG",
         "frame_rate": 30,
-        "width_px": null,
-        "device_id": null,
-        "height_px": null
+        "width_px": {
+          "$variable": {
+            "name": "zoo_cam_width_px"
+          }
+        },
+        "device_id": {
+          "$variable": {
+            "name": "zoo_cam_device_id"
+          }
+        },
+        "height_px": {
+          "$variable": {
+            "name": "zoo_cam_height_px"
+          }
+        }
       },
       "ui_folder": {
         "name": "video"
@@ -48,9 +60,21 @@
       "api": "rdk:component:camera",
       "model": "viam-labs:modular-webcam:webcam",
       "attributes": {
-        "width_px": null,
-        "device_id": null,
-        "height_px": null,
+        "width_px": {
+          "$variable": {
+            "name": "customer_cam_width_px"
+          }
+        },
+        "device_id": {
+          "$variable": {
+            "name": "customer_cam_device_id"
+          }
+        },
+        "height_px": {
+          "$variable": {
+            "name": "customer_cam_height_px"
+          }
+        },
         "format": "MJPEG",
         "frame_rate": 30
       },
@@ -186,17 +210,13 @@
       "frame": {
         "parent": "world",
         "translation": {
-          "x": 300,
-          "y": -610,
-          "z": 21.4
+          "$variable": {
+            "name": "grinder_base_translation"
+          }
         },
         "orientation": {
-          "type": "ov_degrees",
-          "value": {
-            "x": 0,
-            "y": 0,
-            "z": 1,
-            "th": 0
+          "$variable": {
+            "name": "grinder_base_orientation"
           }
         },
         "geometry": {
@@ -282,17 +302,13 @@
       "frame": {
         "parent": "world",
         "translation": {
-          "x": 630,
-          "y": -440,
-          "z": 22.4
+          "$variable": {
+            "name": "tamper_base_translation"
+          }
         },
         "orientation": {
-          "type": "ov_degrees",
-          "value": {
-            "x": 0,
-            "y": 0,
-            "z": 1,
-            "th": 52
+          "$variable": {
+            "name": "tamper_base_orientation"
           }
         },
         "geometry": {
@@ -378,17 +394,13 @@
       "frame": {
         "parent": "world",
         "translation": {
-          "x": 740.0,
-          "y": 0,
-          "z": 23.4
+          "$variable": {
+            "name": "coffee_machine_base_translation"
+          }
         },
         "orientation": {
-          "type": "ov_degrees",
-          "value": {
-            "x": 0,
-            "y": 0,
-            "z": 1,
-            "th": 90
+          "$variable": {
+            "name": "coffee_machine_base_orientation"
           }
         },
         "geometry": {
@@ -680,13 +692,9 @@
           },
           {
             "pose_value": {
-              "x": 280,
-              "y": -540,
-              "z": 95,
-              "o_x": 0,
-              "o_y": -1,
-              "o_z": 0,
-              "theta": -180
+              "$variable": {
+                "name": "grinder_activate_pose"
+              }
             },
             "pose_name": "grinder_activate"
           },
@@ -704,7 +712,11 @@
             "baseline": "decaf_grinder_activate"
           },
           {
-            "pose_value": null,
+            "pose_value": {
+              "$variable": {
+                "name": "decaf_grinder_activate_pose"
+              }
+            },
             "pose_name": "decaf_grinder_activate"
           },
           {
@@ -718,13 +730,9 @@
           {
             "pose_name": "tamper_activate",
             "pose_value": {
-              "x": 615,
-              "y": -435.7,
-              "z": 112.3,
-              "o_x": 0.81,
-              "o_y": -0.59,
-              "o_z": 0,
-              "theta": -180
+              "$variable": {
+                "name": "tamper_activate_pose"
+              }
             }
           },
           {
@@ -736,20 +744,20 @@
           },
           {
             "pose_value": {
-              "x": 689.6,
-              "y": -12.45,
-              "z": 155,
-              "o_x": 0.66,
-              "o_y": -0.75,
-              "o_z": 0,
-              "theta": -179
+              "$variable": {
+                "name": "coffee_in_pose"
+              }
             },
             "pose_name": "coffee_in"
           },
           {
             "pose_name": "coffee_locked_final",
             "baseline": "coffee_in",
-            "orientation": null
+            "orientation": {
+              "$variable": {
+                "name": "coffee_locked_from_in_orientation"
+              }
+            }
           },
           {
             "pose_name": "home",
@@ -785,7 +793,11 @@
           },
           {
             "pose_name": "cleaning_scrapper_active",
-            "pose_value": null
+            "pose_value": {
+              "$variable": {
+                "name": "cleaning_scrapper_active_pose"
+              }
+            }
           },
           {
             "baseline": "cleaning_brush_active",
@@ -796,7 +808,11 @@
           },
           {
             "pose_name": "cleaning_brush_active",
-            "pose_value": null
+            "pose_value": {
+              "$variable": {
+                "name": "cleaning_brush_active_pose"
+              }
+            }
           },
           {
             "translation": {
@@ -944,7 +960,11 @@
       "api": "rdk:component:audio_out",
       "model": "viam:system-audio:speaker",
       "attributes": {
-        "device_name": null,
+        "device_name": {
+          "$variable": {
+            "name": "device_name"
+          }
+        },
         "num_channels": 2,
         "sample_rate": 48000,
         "volume": 100
@@ -1001,7 +1021,11 @@
             }
           },
           {
-            "pose_value": null,
+            "pose_value": {
+              "$variable": {
+                "name": "coffee_button_on_pose"
+              }
+            },
             "pose_name": "coffee_button_on"
           },
           {
@@ -1021,7 +1045,11 @@
           },
           {
             "pose_name": "coffee_locked_final",
-            "pose_value": null
+            "pose_value": {
+              "$variable": {
+                "name": "coffee_locked_final_claw_pose"
+              }
+            }
           },
           {
             "pose_name": "empty_cup_approach",
@@ -1032,25 +1060,17 @@
           },
           {
             "pose_value": {
-              "x": 334,
-              "y": 507,
-              "z": 40,
-              "o_x": 0,
-              "o_y": 1,
-              "o_z": -0.03,
-              "theta": -180
+              "$variable": {
+                "name": "empty_cup_pose"
+              }
             },
             "pose_name": "empty_cup"
           },
           {
             "pose_value": {
-              "x": 660.7,
-              "y": 18,
-              "z": 88.5,
-              "o_x": 0.71,
-              "o_y": -0.71,
-              "o_z": 0,
-              "theta": -180
+              "$variable": {
+                "name": "cup_ready_for_coffee_pose"
+              }
             },
             "pose_name": "cup_ready_for_coffee"
           },
@@ -1064,18 +1084,18 @@
           },
           {
             "pose_name": "cup_observe",
-            "pose_value": null
+            "pose_value": {
+              "$variable": {
+                "name": "cup_observe_pose"
+              }
+            }
           },
           {
             "pose_name": "staging",
             "pose_value": {
-              "x": -400,
-              "y": 450,
-              "z": 95,
-              "o_x": 0,
-              "o_y": 1,
-              "o_z": 0,
-              "theta": -180
+              "$variable": {
+                "name": "staging-area"
+              }
             }
           },
           {
@@ -1120,17 +1140,13 @@
       "frame": {
         "parent": "world",
         "translation": {
-          "x": 0,
-          "y": 718,
-          "z": 0
+          "$variable": {
+            "name": "stream_deck_translation"
+          }
         },
         "orientation": {
-          "type": "ov_degrees",
-          "value": {
-            "x": 0,
-            "y": 0,
-            "z": 1,
-            "th": 0
+          "$variable": {
+            "name": "stream_deck_orientation"
           }
         },
         "geometry": {
@@ -1184,24 +1200,19 @@
       "frame": {
         "parent": "world",
         "translation": {
-          "x": 892,
-          "y": 362,
-          "z": 67.4
+          "$variable": {
+            "name": "cleaner_base_translation"
+          }
         },
         "orientation": {
-          "type": "ov_degrees",
-          "value": {
-            "x": 0,
-            "y": 0,
-            "z": 1,
-            "th": 0
+          "$variable": {
+            "name": "cleaner_base_orientation"
           }
         },
         "geometry": {
-          "type": "box",
-          "x": 125,
-          "y": 235,
-          "z": 150
+          "$variable": {
+            "name": "cleaner_base_geometry"
+          }
         }
       },
       "ui_folder": {
@@ -1385,17 +1396,13 @@
       "frame": {
         "parent": "world",
         "translation": {
-          "x": 0,
-          "y": 718,
-          "z": 0
+          "$variable": {
+            "name": "stream_deck_translation"
+          }
         },
         "orientation": {
-          "type": "ov_degrees",
-          "value": {
-            "x": 0,
-            "y": 0,
-            "z": 1,
-            "th": 0
+          "$variable": {
+            "name": "stream_deck_orientation"
           }
         },
         "geometry": {
@@ -1417,9 +1424,9 @@
       "frame": {
         "parent": "world",
         "translation": {
-          "x": 0,
-          "y": -740,
-          "z": 275
+          "$variable": {
+            "name": "zoo_cam_translation"
+          }
         },
         "orientation": {
           "type": "ov_degrees",
@@ -1481,17 +1488,13 @@
       "frame": {
         "parent": "world",
         "translation": {
-          "x": 30,
-          "y": -610,
-          "z": 21.4
+          "$variable": {
+            "name": "decaf_grinder_base_translation"
+          }
         },
         "orientation": {
-          "type": "ov_degrees",
-          "value": {
-            "x": 0,
-            "y": 0,
-            "z": 1,
-            "th": 0
+          "$variable": {
+            "name": "decaf_grinder_base_orientation"
           }
         },
         "geometry": {
@@ -1607,7 +1610,11 @@
       "model": "viam:system-audio:microphone",
       "attributes": {
         "num_channels": 1,
-        "device_id": null
+        "device_id": {
+          "$variable": {
+            "name": "mic_device_id"
+          }
+        }
       },
       "ui_folder": {
         "name": "voice"
@@ -1733,7 +1740,11 @@
         "listen_timeout_sec": 11,
         "anthropic_api_key": "sk-ant-REDACTED",
         "conversation_end_cue": "Moving along",
-        "wake_word": null,
+        "wake_word": {
+          "$variable": {
+            "name": "wake_word"
+          }
+        },
         "command_status": {
           "description": "coffee machine queue state. `count` is the number of orders still pending (not yet complete). `orders[]` lists pending orders first, then any just-completed ones; each entry has `customer_name`, `drink`, `raw_step` (current step label, empty before start), and `completed_at` (empty string while pending, RFC3339 timestamp once done). `is_busy` is true while the machine is actively preparing a drink. `is_paused` is true when the queue is waiting on an operator 'proceed' (e.g. after a manual cancel or inter-order cleanup pause). Treat the most recently dispatched command as in progress while `is_busy` is true or `count` > 0; treat it as finished when both are false and the latest entry in `orders[]` has a non-empty `completed_at`.",
           "resource": "coffee-lifecycle"
@@ -1807,7 +1818,11 @@
         ],
         "language_code": "en-US",
         "max_utterance_words": 5,
-        "system_prompt": null,
+        "system_prompt": {
+          "$variable": {
+            "name": "voice_command_system_prompt"
+          }
+        },
         "max_tokens": 512
       },
       "ui_folder": {
@@ -2453,16 +2468,36 @@
       "api": "rdk:service:generic",
       "model": "viam:beanjamin:coffee",
       "attributes": {
-        "brew_time_sec": null,
+        "brew_time_sec": {
+          "$variable": {
+            "name": "brew_time_sec"
+          }
+        },
         "cam_storage_mux_name": "video-store-mux",
-        "lungo_brew_time_sec": null,
+        "lungo_brew_time_sec": {
+          "$variable": {
+            "name": "lungo_brew_time_sec"
+          }
+        },
         "arm_name": "arm",
         "src_camera_name": "cam",
-        "can_serve_decaf": null,
+        "can_serve_decaf": {
+          "$variable": {
+            "name": "can_serve_decaf"
+          }
+        },
         "save_motion_requests_dir": "${environment.HOME}/.viam/capture",
         "claws_pose_switcher_name": "claws-position-switch",
-        "place_cup": null,
-        "clean_after_use": null,
+        "place_cup": {
+          "$variable": {
+            "name": "place_cup"
+          }
+        },
+        "clean_after_use": {
+          "$variable": {
+            "name": "clean_after_use"
+          }
+        },
         "cup_detection_retry_sleep_ms": 250,
         "portafilter_shake_sec": 2.5,
         "grind_time_sec": 9,
@@ -2472,7 +2507,11 @@
         "gripper_name": "gripper",
         "conversational": true,
         "pose_switcher_name": "filter-poses-switch",
-        "cup_centroid_min_z_mm": null,
+        "cup_centroid_min_z_mm": {
+          "$variable": {
+            "name": "cup_z_min"
+          }
+        },
         "viz_url": "",
         "input_range_override": {
           "arm": {
@@ -2486,11 +2525,23 @@
           }
         },
         "cup_vision_service_name": "detection-segmenter",
-        "cup_grab_relative_pose": null,
-        "cup_approach_relative_pose": null,
+        "cup_grab_relative_pose": {
+          "$variable": {
+            "name": "cup_grab_relative_pose"
+          }
+        },
+        "cup_approach_relative_pose": {
+          "$variable": {
+            "name": "cup_approach_relative_pose"
+          }
+        },
         "data_dir": "/.viam/order-data",
         "order_sensor_name": "order-events",
-        "dynamic_cup_pickup": null
+        "dynamic_cup_pickup": {
+          "$variable": {
+            "name": "dynamic_cup_pickup"
+          }
+        }
       },
       "log_configuration": {
         "level": "debug"
@@ -2566,7 +2617,11 @@
       "api": "rdk:service:generic",
       "model": "viam:beanjamin:dial-control-motion",
       "attributes": {
-        "arm_name": null
+        "arm_name": {
+          "$variable": {
+            "name": "arm_name"
+          }
+        }
       },
       "ui_folder": {
         "name": "calibration"
@@ -2627,7 +2682,11 @@
       "api": "rdk:service:generic",
       "model": "viam:conversation-bundle:text-to-speech",
       "attributes": {
-        "voice_name": null,
+        "voice_name": {
+          "$variable": {
+            "name": "voice_command_speech_voice_name"
+          }
+        },
         "audio_out": "speaker",
         "google_credentials_json": {
           "token_uri": "https://oauth2.googleapis.com/token",
@@ -2803,156 +2862,5 @@
       ],
       "fragment_id": "f6e98d80-20a0-4fb6-9cb3-7b527a91ec10"
     }
-  ],
-  "_resolved_variables": {
-    "coffee_machine_base_translation": {
-      "x": 740.0,
-      "y": 0,
-      "z": 23.4
-    },
-    "coffee_machine_base_orientation": {
-      "type": "ov_degrees",
-      "value": {
-        "x": 0,
-        "y": 0,
-        "z": 1,
-        "th": 90
-      }
-    },
-    "grinder_base_translation": {
-      "x": 300,
-      "y": -610,
-      "z": 21.4
-    },
-    "grinder_base_orientation": {
-      "type": "ov_degrees",
-      "value": {
-        "x": 0,
-        "y": 0,
-        "z": 1,
-        "th": 0
-      }
-    },
-    "decaf_grinder_base_translation": {
-      "x": 30,
-      "y": -610,
-      "z": 21.4
-    },
-    "decaf_grinder_base_orientation": {
-      "type": "ov_degrees",
-      "value": {
-        "x": 0,
-        "y": 0,
-        "z": 1,
-        "th": 0
-      }
-    },
-    "tamper_base_translation": {
-      "x": 630,
-      "y": -440,
-      "z": 22.4
-    },
-    "tamper_base_orientation": {
-      "type": "ov_degrees",
-      "value": {
-        "x": 0,
-        "y": 0,
-        "z": 1,
-        "th": 52
-      }
-    },
-    "cleaner_base_translation": {
-      "x": 892,
-      "y": 362,
-      "z": 67.4
-    },
-    "cleaner_base_orientation": {
-      "type": "ov_degrees",
-      "value": {
-        "x": 0,
-        "y": 0,
-        "z": 1,
-        "th": 0
-      }
-    },
-    "cleaner_base_geometry": {
-      "type": "box",
-      "x": 125,
-      "y": 235,
-      "z": 150
-    },
-    "stream_deck_translation": {
-      "x": 0,
-      "y": 718,
-      "z": 0
-    },
-    "stream_deck_orientation": {
-      "type": "ov_degrees",
-      "value": {
-        "x": 0,
-        "y": 0,
-        "z": 1,
-        "th": 0
-      }
-    },
-    "zoo_cam_translation": {
-      "x": 0,
-      "y": -740,
-      "z": 275
-    },
-    "grinder_activate_pose": {
-      "x": 280,
-      "y": -540,
-      "z": 95,
-      "o_x": 0,
-      "o_y": -1,
-      "o_z": 0,
-      "theta": -180
-    },
-    "tamper_activate_pose": {
-      "x": 615,
-      "y": -435.7,
-      "z": 112.3,
-      "o_x": 0.81,
-      "o_y": -0.59,
-      "o_z": 0,
-      "theta": -180
-    },
-    "coffee_in_pose": {
-      "x": 689.6,
-      "y": -12.45,
-      "z": 155,
-      "o_x": 0.66,
-      "o_y": -0.75,
-      "o_z": 0,
-      "theta": -179
-    },
-    "staging-area": {
-      "x": -400,
-      "y": 450,
-      "z": 95,
-      "o_x": 0,
-      "o_y": 1,
-      "o_z": 0,
-      "theta": -180
-    },
-    "cup_ready_for_coffee_pose": {
-      "x": 660.7,
-      "y": 18,
-      "z": 88.5,
-      "o_x": 0.71,
-      "o_y": -0.71,
-      "o_z": 0,
-      "theta": -180
-    },
-    "empty_cup_pose": {
-      "x": 334,
-      "y": 507,
-      "z": 40,
-      "o_x": 0,
-      "o_y": 1,
-      "o_z": -0.03,
-      "theta": -180
-    }
-  }
+  ]
 }
