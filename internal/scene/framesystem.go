@@ -115,8 +115,9 @@ func addToolFrame(fs *referenceframe.FrameSystem, o Obstacle, parent referencefr
 // excluded from the PLANNING collision model: our generic rdk arm kinematics
 // sweep into them, whereas Beanjamin's actual arm+gripper clears them. The arm
 // body still plans collision-free against every interaction station (coffee
-// machine, grinders, tamper) and structure (table, ceiling, mount). These frames
-// can still be rendered as visual-only scene dressing.
+// machine, grinders, tamper) and structure (table, ceiling, mount). They are
+// also omitted from the rendered scene (which is built from this same frame
+// system) so the arm — planned without them — never appears to clip them.
 var peripheralCollisionExclusions = map[string]bool{
 	"zoo-cam-obstacle":     true,
 	"speaker-obstacle":     true,

@@ -189,6 +189,29 @@ Both de-risking spikes ran and **passed**:
   on the arm and key every goal to the `filter` frame. Reachability is mis-estimated
   without it. (Empty-world plans returned 2 steps; obstacle-aware plans will be longer.)
 
+## Implementation note — obstacle-aware reachability (2026-06-16)
+
+Planning the brew sequence in the *full* config scene (not the empty-world spike)
+surfaced three real requirements, now resolved; both xArm6 and UR5e plan the
+complete sequence (267 trajectory steps each):
+
+1. **Valid start config.** The all-zero joint config folds each arm down through
+   the `table` (filter at z≈-213), so there is no collision-free start. Each arm
+   starts from a validated standing "ready" config (`brew.ReadyConfig`).
+2. **Tool-vs-station contact allowed.** The tool frames (`filter`,
+   `portafilter-handle`, `coffee-claws-middle`) are allowed to contact the
+   station they act on, on both approach and activate steps — mirroring
+   beanjamin's `coffeeBrewingCollisions`. The arm **body** still plans
+   collision-free against all stations + structure.
+3. **Peripheral obstacles excluded from the collision model.** Real config
+   obstacles outside the brew workspace — `zoo-cam-obstacle` (camera mast),
+   `speaker-obstacle`, `stream-deck-obstacle`, `empty-cup` — are excluded from
+   collision (and from rendering). Our generic rdk kinematics sweep into them
+   where beanjamin's actual arm+gripper clears them. `wall` is excluded via the
+   real machine's `disabled` flag. The kept scene (coffee machine, grinders,
+   tamper, cleaner, table, ceiling, mount) is a faithful, recognizable barista
+   workspace.
+
 ## Risks & open spikes
 
 1. ~~**motion-tools render-path export.**~~ **Resolved (Spike 1)** — everything needed is
