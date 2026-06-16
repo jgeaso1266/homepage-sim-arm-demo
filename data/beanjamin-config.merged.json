@@ -1599,7 +1599,8 @@
       },
       "ui_folder": {
         "name": "obstacles"
-      }
+      },
+      "disabled": true
     },
     {
       "name": "mic",

@@ -65,6 +65,9 @@ func LoadObstacles(configPath string) (map[string]Obstacle, error) {
 		if comp.Model != obstacleModel || comp.Frame == nil {
 			continue
 		}
+		if comp.Disabled {
+			continue // disabled on the real machine (e.g. wall) — not a real obstacle
+		}
 		fr := comp.Frame
 		if toolFrameNames[fr.Parent] {
 			continue // gripper-attached tool chain, handled elsewhere
@@ -184,9 +187,10 @@ type fragmentWithVars struct {
 }
 
 type component struct {
-	Name  string `json:"name"`
-	Model string `json:"model"`
-	Frame *frame `json:"frame"`
+	Name     string `json:"name"`
+	Model    string `json:"model"`
+	Frame    *frame `json:"frame"`
+	Disabled bool   `json:"disabled"`
 }
 
 type frame struct {

@@ -110,12 +110,34 @@ func addToolFrame(fs *referenceframe.FrameSystem, o Obstacle, parent referencefr
 	return nil
 }
 
+// peripheralCollisionExclusions are real config obstacles that sit outside the
+// brew workspace (a camera mast, speaker, stream-deck, a stray cup). They are
+// excluded from the PLANNING collision model: our generic rdk arm kinematics
+// sweep into them, whereas Beanjamin's actual arm+gripper clears them. The arm
+// body still plans collision-free against every interaction station (coffee
+// machine, grinders, tamper) and structure (table, ceiling, mount). These frames
+// can still be rendered as visual-only scene dressing.
+var peripheralCollisionExclusions = map[string]bool{
+	"zoo-cam-obstacle":     true,
+	"speaker-obstacle":     true,
+	"stream-deck-obstacle": true,
+	"empty-cup":            true,
+}
+
 // addObstacles attaches every world-scene obstacle from the config in an order
 // that guarantees each frame's parent is already present.
 func addObstacles(fs *referenceframe.FrameSystem, configPath string) error {
-	obstacles, err := LoadObstacles(configPath)
+	loaded, err := LoadObstacles(configPath)
 	if err != nil {
 		return fmt.Errorf("load obstacles: %w", err)
+	}
+
+	obstacles := make(map[string]Obstacle, len(loaded))
+	for name, o := range loaded {
+		if peripheralCollisionExclusions[name] {
+			continue // peripheral, non-interaction obstacle — not in collision model
+		}
+		obstacles[name] = o
 	}
 
 	added := make(map[string]bool, len(obstacles))
