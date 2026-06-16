@@ -16,6 +16,9 @@ import (
 const (
 	linearLineToleranceMm          = 1.0
 	linearOrientationToleranceDegs = 2.0
+
+	// planRandomSeed fixes the motion planner's RNG so baking is reproducible.
+	planRandomSeed = 7
 )
 
 // PlanSequence plans the full brew sequence into a single concatenated joint
@@ -66,11 +69,18 @@ func PlanSequence(
 			nil,
 		)
 
+		// Fix the planner seed so baking is deterministic and reproducible (the
+		// motion algorithms are otherwise randomized, which made the constrained
+		// coffee insertion plan flakily).
+		opts := armplanning.NewBasicPlannerOptions()
+		opts.RandomSeed = planRandomSeed
+
 		plan, _, err := armplanning.PlanMotion(ctx, logger, &armplanning.PlanRequest{
-			FrameSystem: fs,
-			Goals:       []*armplanning.PlanState{goal},
-			StartState:  armplanning.NewPlanState(nil, prevInputs),
-			Constraints: constraints,
+			FrameSystem:    fs,
+			Goals:          []*armplanning.PlanState{goal},
+			StartState:     armplanning.NewPlanState(nil, prevInputs),
+			Constraints:    constraints,
+			PlannerOptions: opts,
 		})
 		if err != nil {
 			return nil, fmt.Errorf("plan step %q to %v: %w", step.Name, step.Pose.Point(), err)
