@@ -14,4 +14,9 @@ export default defineConfig({
 	ssr: {
 		noExternal: ['camera-controls'],
 	},
+	test: {
+		environment: 'node',
+		include: ['src/**/*.spec.ts'],
+		setupFiles: ['./vitest-setup.ts'],
+	},
 })
