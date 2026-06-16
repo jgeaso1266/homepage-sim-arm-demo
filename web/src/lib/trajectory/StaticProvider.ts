@@ -21,8 +21,7 @@ export class StaticProvider implements TrajectoryProvider {
 			throw new Error(`failed to load ${url}: ${res.status}`)
 		}
 		const doc = (await res.json()) as AssetDoc
-		// fromJsonString is stable across motion-tools versions (fromJson is newer).
-		const scene = SnapshotProto.fromJsonString(JSON.stringify(doc.scene))
+		const scene = SnapshotProto.fromJson(doc.scene as never)
 		return { scene, track: doc.track }
 	}
 }

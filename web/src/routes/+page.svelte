@@ -1,11 +1,9 @@
 <script lang="ts">
 	// Smoke import to verify the motion-tools integration resolves and builds.
-	// (MotionTools is the Visualizer component; the local dist predates the
-	// Visualizer alias, so we import the name the built package exposes.)
-	import { MotionTools } from '@viamrobotics/motion-tools'
+	import { Visualizer } from '@viamrobotics/motion-tools'
 	import { Snapshot, SnapshotProto } from '@viamrobotics/motion-tools/lib'
 
-	const ready = Boolean(MotionTools && Snapshot && SnapshotProto)
+	const ready = Boolean(Visualizer && Snapshot && SnapshotProto)
 </script>
 
 <main style="padding: 2rem">

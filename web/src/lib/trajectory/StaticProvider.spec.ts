@@ -4,7 +4,7 @@ import { describe, expect, it, vi, afterEach } from 'vitest'
 // logic (fetch → parse → shape) without depending on protobuf-es class
 // resolution in the node test environment. fromJsonString just round-trips here.
 vi.mock('@viamrobotics/motion-tools/lib', () => ({
-	Snapshot: { fromJsonString: (s: string) => JSON.parse(s) },
+	Snapshot: { fromJson: (v: unknown) => v },
 }))
 
 import { StaticProvider } from './StaticProvider'
