@@ -8,6 +8,7 @@ import (
 	"math"
 	"strings"
 
+	"github.com/golang/geo/r3"
 	"github.com/google/uuid"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/referenceframe"
@@ -86,8 +87,14 @@ func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*A
 	// (DrawFrameSystemGeometries derives every transform UUID from it); otherwise a
 	// fresh random UUID would churn every entity id on each run. (Track poses are
 	// rounded but may still differ sub-micron between bakes — that's expected.)
+	// Bake a camera framed on the workspace (arm at origin; grinder/tamper/machine
+	// out to +x/-y), so the embedded view is well-composed without runtime tuning.
 	colors := sceneColors(fs)
-	snap := draw.NewSnapshot()
+	camera := draw.NewSceneCamera(
+		r3.Vector{X: 2200, Y: -1950, Z: 1500},
+		r3.Vector{X: 360, Y: -180, Z: 520},
+	)
+	snap := draw.NewSnapshot(draw.WithSceneCamera(camera))
 	snap.SetUUID(sceneUUID)
 	if err := snap.DrawFrameSystemGeometries(fs, traj[0], colors); err != nil {
 		return nil, err

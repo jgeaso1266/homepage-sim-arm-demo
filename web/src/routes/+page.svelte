@@ -91,6 +91,14 @@
 		position: fixed;
 		inset: 0;
 	}
+
+	/* Hide motion-tools' built-in chrome (frame tree, transform controls, logs,
+	   settings) for a clean homepage view. Those overlays are the non-canvas
+	   children of the Visualizer's root; keep the child that holds the WebGL
+	   canvas. */
+	:global(.overflow-hidden.dark\:bg-white > div:not(:has(canvas))) {
+		display: none !important;
+	}
 	.overlay {
 		position: absolute;
 		inset: 0;
