@@ -1,0 +1,143 @@
+// Package bake turns a planned brew trajectory into the static assets the web
+// app replays: a scene Snapshot (obstacles + arm at its start pose) and a track
+// of per-step world-frame poses for the moving arm/tool geometries.
+package bake
+
+import (
+	"context"
+	"strings"
+
+	"go.viam.com/rdk/logging"
+	"go.viam.com/rdk/referenceframe"
+
+	"github.com/viam-labs/motion-tools/draw"
+
+	"homepage-simulated-arm-demo/internal/brew"
+	"homepage-simulated-arm-demo/internal/scene"
+)
+
+// armFrameName is the frame name the arm model is mounted under in the planning
+// frame system; its links and the gripper-mounted tool frames are what move.
+const armFrameName = "arm"
+
+// tickMs is the spacing between trajectory steps during playback.
+const tickMs = 40
+
+// Pose is a world-frame pose in motion-tools' common.v1.Pose JSON shape
+// (millimeters + orientation vector degrees), so the web side can feed it
+// straight into poseToMatrix.
+type Pose struct {
+	X     float64 `json:"x"`
+	Y     float64 `json:"y"`
+	Z     float64 `json:"z"`
+	OX    float64 `json:"o_x"`
+	OY    float64 `json:"o_y"`
+	OZ    float64 `json:"o_z"`
+	Theta float64 `json:"theta"`
+}
+
+// TrackStep is one playback frame: the world pose of every moving entity, keyed
+// by the entity's "<frame>:<geometryLabel>" name (matching the scene snapshot).
+type TrackStep struct {
+	TMs   int             `json:"tMs"`
+	Poses map[string]Pose `json:"poses"`
+}
+
+// Asset is the full replay payload for one arm.
+type Asset struct {
+	Scene *draw.Snapshot
+	Track []TrackStep
+}
+
+// Baker builds assets from data files. Paths are injected so the same code runs
+// from the repo root (cmd/bake) and from a test working directory.
+type Baker struct {
+	KinematicsDir string // directory holding <arm>.json kinematics models
+	ConfigPath    string // path to the merged beanjamin config
+}
+
+// Build plans the brew sequence for arm and returns its replay Asset.
+func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*Asset, error) {
+	fs, err := scene.BuildFrameSystem(armFrameName, b.KinematicsDir+"/"+arm+".json", b.ConfigPath)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg, ok := brew.ReadyConfig(arm)
+	if !ok {
+		return nil, &unknownArmError{arm}
+	}
+	start := referenceframe.NewZeroInputs(fs)
+	start[armFrameName] = cfg
+
+	traj, err := brew.PlanSequence(ctx, logger, fs, armFrameName, "filter", start, brew.Sequence())
+	if err != nil {
+		return nil, err
+	}
+
+	// Scene snapshot: every geometry (obstacles + arm/tool) at the start pose.
+	colors := sceneColors(fs)
+	snap := draw.NewSnapshot()
+	if err := snap.DrawFrameSystemGeometries(fs, traj[0], colors); err != nil {
+		return nil, err
+	}
+
+	// Track: per step, the world pose of each moving (arm/tool) geometry.
+	track := make([]TrackStep, len(traj))
+	for i, inputs := range traj {
+		transforms, err := draw.NewDrawnFrameSystem(fs, inputs).ToTransforms()
+		if err != nil {
+			return nil, err
+		}
+		poses := make(map[string]Pose)
+		for _, t := range transforms {
+			if !isMoving(t.GetReferenceFrame()) {
+				continue
+			}
+			// The scene's observer frame is World, so each geometry's world pose
+			// lives in its center (PhysicalObject), not PoseInObserverFrame.
+			p := t.GetPhysicalObject().GetCenter()
+			poses[t.GetReferenceFrame()] = Pose{
+				X: p.GetX(), Y: p.GetY(), Z: p.GetZ(),
+				OX: p.GetOX(), OY: p.GetOY(), OZ: p.GetOZ(), Theta: p.GetTheta(),
+			}
+		}
+		track[i] = TrackStep{TMs: i * tickMs, Poses: poses}
+	}
+
+	return &Asset{Scene: snap, Track: track}, nil
+}
+
+// Moving geometries are the arm's own links (named "arm:arm:<link>") and the
+// gripper-mounted tool frames (named by their bare frame name). isMoving matches
+// the transform ReferenceFrame against both forms.
+var movingToolFrames = map[string]bool{
+	"filter":              true,
+	"portafilter-handle":  true,
+	"coffee-claws-middle": true,
+}
+
+func isMoving(referenceFrame string) bool {
+	return strings.HasPrefix(referenceFrame, armFrameName+":") || movingToolFrames[referenceFrame]
+}
+
+// sceneColors tints the arm/tool geometries distinctly from the static scene.
+func sceneColors(fs *referenceframe.FrameSystem) map[string]draw.Color {
+	arm := draw.ColorFromHex("#2DD4BF")   // teal — the robot
+	scene := draw.ColorFromHex("#94A3B8") // slate — the workspace
+	colors := make(map[string]draw.Color)
+	for _, name := range fs.FrameNames() {
+		switch {
+		case name == armFrameName || name == "gripper" || name == "filter" ||
+			name == "portafilter-handle" || name == "coffee-claws-middle":
+			colors[name] = arm
+		default:
+			colors[name] = scene
+		}
+	}
+	return colors
+}
+
+type unknownArmError struct{ arm string }
+
+func (e *unknownArmError) Error() string { return "no ready config for arm " + e.arm }
