@@ -5,8 +5,10 @@ package bake
 
 import (
 	"context"
+	"math"
 	"strings"
 
+	"github.com/google/uuid"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/referenceframe"
 
@@ -15,6 +17,10 @@ import (
 	"homepage-simulated-arm-demo/internal/brew"
 	"homepage-simulated-arm-demo/internal/scene"
 )
+
+// sceneUUID is a fixed snapshot identity so re-baking produces byte-stable
+// assets (transform UUIDs are derived from it).
+var sceneUUID = uuid.MustParse("be4a0000-0000-4000-8000-000000000001")
 
 // armFrameName is the frame name the arm model is mounted under in the planning
 // frame system; its links and the gripper-mounted tool frames are what move.
@@ -76,8 +82,13 @@ func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*A
 	}
 
 	// Scene snapshot: every geometry (obstacles + arm/tool) at the start pose.
+	// Pin the snapshot UUID so transform identities are stable across re-bakes
+	// (DrawFrameSystemGeometries derives every transform UUID from it); otherwise a
+	// fresh random UUID would churn every entity id on each run. (Track poses are
+	// rounded but may still differ sub-micron between bakes — that's expected.)
 	colors := sceneColors(fs)
 	snap := draw.NewSnapshot()
+	snap.SetUUID(sceneUUID)
 	if err := snap.DrawFrameSystemGeometries(fs, traj[0], colors); err != nil {
 		return nil, err
 	}
@@ -98,8 +109,8 @@ func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*A
 			// lives in its center (PhysicalObject), not PoseInObserverFrame.
 			p := t.GetPhysicalObject().GetCenter()
 			poses[t.GetReferenceFrame()] = Pose{
-				X: p.GetX(), Y: p.GetY(), Z: p.GetZ(),
-				OX: p.GetOX(), OY: p.GetOY(), OZ: p.GetOZ(), Theta: p.GetTheta(),
+				X: round(p.GetX()), Y: round(p.GetY()), Z: round(p.GetZ()),
+				OX: round(p.GetOX()), OY: round(p.GetOY()), OZ: round(p.GetOZ()), Theta: round(p.GetTheta()),
 			}
 		}
 		track[i] = TrackStep{TMs: i * tickMs, Poses: poses}
@@ -121,17 +132,22 @@ func isMoving(referenceFrame string) bool {
 	return strings.HasPrefix(referenceFrame, armFrameName+":") || movingToolFrames[referenceFrame]
 }
 
+// round quantizes a pose component to 0.01mm / 0.01°, well below visual
+// resolution, so sub-micron planner jitter doesn't churn the committed assets.
+func round(v float64) float64 { return math.Round(v*100) / 100 }
+
 // sceneColors tints the arm/tool geometries distinctly from the static scene.
 func sceneColors(fs *referenceframe.FrameSystem) map[string]draw.Color {
 	arm := draw.ColorFromHex("#2DD4BF")   // teal — the robot
 	scene := draw.ColorFromHex("#94A3B8") // slate — the workspace
 	colors := make(map[string]draw.Color)
 	for _, name := range fs.FrameNames() {
-		switch {
-		case name == armFrameName || name == "gripper" || name == "filter" ||
-			name == "portafilter-handle" || name == "coffee-claws-middle":
+		// Source the tool-frame set from movingToolFrames so the color map can't
+		// drift from isMoving. "gripper" is a pure (geometry-less) frame, included
+		// here for completeness.
+		if name == armFrameName || name == "gripper" || movingToolFrames[name] {
 			colors[name] = arm
-		default:
+		} else {
 			colors[name] = scene
 		}
 	}

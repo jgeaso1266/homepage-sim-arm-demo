@@ -69,9 +69,11 @@ func PlanSequence(
 			nil,
 		)
 
-		// Fix the planner seed so baking is deterministic and reproducible (the
-		// motion algorithms are otherwise randomized, which made the constrained
-		// coffee insertion plan flakily).
+		// Fix the planner seed so baking is stable in shape: the motion algorithms
+		// are otherwise randomized, which made the constrained coffee insertion
+		// plan flakily. The seed pins the trajectory's structure (step count, which
+		// goals solve); sub-micron pose jitter from concurrent IK still varies run
+		// to run and is absorbed downstream by rounding the baked poses.
 		opts := armplanning.NewBasicPlannerOptions()
 		opts.RandomSeed = planRandomSeed
 
