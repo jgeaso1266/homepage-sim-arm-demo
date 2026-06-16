@@ -161,13 +161,41 @@ gating check in the build order.
 - **Playwright e2e:** load `/barista`, toggle arm, click "Make coffee", assert the scene
   animates (entities update).
 
+## Spike results (2026-06-16)
+
+Both de-risking spikes ran and **passed**:
+
+- **Spike 1 — motion-tools render path: GREEN, no upstream changes needed.**
+  `@viamrobotics/motion-tools` exports `Visualizer`; `@viamrobotics/motion-tools/lib`
+  exports the `Snapshot` component + `SnapshotProto` + transform helpers; the main entry
+  exports the ECS (`useWorld`, `useQuery`, `useTrait`, `traits`). A static Snapshot JSON
+  renders client-side with no DrawService. Animation: query entities by `traits.Matrix`,
+  mutate the `Matrix4` in place, call `entity.changed(traits.Matrix)` + `invalidate()`
+  inside a Threlte `useTask`; render mode is on-demand. **Refinement:** the baked track
+  should store **world-frame** poses per moving link (parent = `world`) so the player
+  writes them straight into `traits.Matrix`.
+
+- **Spike 2 — standalone rdk planning + reachability: GREEN, with a hard requirement.**
+  A standalone Go module (`cmd/bake`) successfully imports and runs
+  `armplanning.PlanMotion` against rdk v0.122.0 and returns real trajectories. **Both
+  xArm6 and UR5e plan all three reach-stressing brew poses** (`grinder_activate`,
+  `tamper_activate`, `coffee_in`) — **but only when the tool chain is modeled.** Planning
+  the bare flange to the filter-tip pose put `tamper_activate` (≈754 mm radius) outside
+  xArm6's ~700 mm reach (IK failure). Adding the config's tool offset — gripper (z≈105) +
+  filter (z≈220) ≈ **325 mm**, with goals keyed to the `filter` frame — pulls the flange
+  inward and all poses plan for both arms.
+
+  **Requirement for the real baker:** build the full tool chain (gripper + filter frames)
+  on the arm and key every goal to the `filter` frame. Reachability is mis-estimated
+  without it. (Empty-world plans returned 2 steps; obstacle-aware plans will be longer.)
+
 ## Risks & open spikes
 
-1. **motion-tools render-path export (task-1 spike).** Does `@viamrobotics/motion-tools`
-   export the snapshot render path, or only `Visualizer`? If not, add a small upstream
-   export or render via `Visualizer` + local config.
-2. **UR5e reachability** of the deepest poses — verified by the baker; may need base-offset
-   tuning or dropping a pose.
+1. ~~**motion-tools render-path export.**~~ **Resolved (Spike 1)** — everything needed is
+   already exported; no upstream change required.
+2. ~~**UR5e reachability.**~~ **Resolved (Spike 2)** — both arms reach all probe poses
+   *with the tool chain modeled*. xArm6 (the real arm) is the tighter bound, not UR5e.
+   Remaining: re-verify once obstacles + the full sequence are added.
 3. **WASM (v2 only).** `armplanning` → `js/wasm` with `-tags no_cgo` (pure-Go IK path
    confirmed to exist: `motionplan/ik/solver_nocgo.go`). Real build spike required before
    committing to v2; not on the v1 critical path.
