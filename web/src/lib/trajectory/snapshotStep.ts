@@ -1,4 +1,4 @@
-import type { Snapshot as SnapshotProto } from '@viamrobotics/motion-tools/lib'
+import type { SnapshotProto } from '@viamrobotics/motion-tools/lib'
 
 import type { TrackStep } from './types'
 

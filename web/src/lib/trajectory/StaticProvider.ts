@@ -1,5 +1,5 @@
 import { base } from '$app/paths'
-import { Snapshot as SnapshotProto } from '@viamrobotics/motion-tools/lib'
+import { SnapshotProto } from '@viamrobotics/motion-tools/lib'
 
 import type { ArmId, Trajectory, TrackStep, TrajectoryProvider } from './types'
 

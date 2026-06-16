@@ -1,4 +1,4 @@
-import type { Snapshot as SnapshotProto } from '@viamrobotics/motion-tools/lib'
+import type { SnapshotProto } from '@viamrobotics/motion-tools/lib'
 
 /** The arms the demo toggles between. Matches the baked asset filenames. */
 export type ArmId = 'xarm6' | 'ur5e'

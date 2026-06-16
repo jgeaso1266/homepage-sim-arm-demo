@@ -1,13 +1,152 @@
 <script lang="ts">
-	// Smoke import to verify the motion-tools integration resolves and builds.
+	import { onMount } from 'svelte'
+	import { ViamAppProvider, ViamProvider } from '@viamrobotics/svelte-sdk'
 	import { Visualizer } from '@viamrobotics/motion-tools'
-	import { Snapshot, SnapshotProto } from '@viamrobotics/motion-tools/lib'
 
-	const ready = Boolean(Visualizer && Snapshot && SnapshotProto)
+	import { StaticProvider } from '$lib/trajectory/StaticProvider'
+	import TrajectoryPlayer from '$lib/trajectory/TrajectoryPlayer.svelte'
+	import { ARMS, type ArmId, type Trajectory } from '$lib/trajectory/types'
+
+	const provider = new StaticProvider()
+
+	let arm = $state<ArmId>('xarm6')
+	let playing = $state(false)
+	let trajectory = $state.raw<Trajectory | undefined>(undefined)
+	let loading = $state(false)
+
+	async function load(which: ArmId) {
+		loading = true
+		playing = false
+		try {
+			trajectory = await provider.load(which)
+		} catch (e) {
+			console.error('trajectory load failed', e)
+		} finally {
+			loading = false
+		}
+	}
+
+	onMount(() => load(arm))
+
+	function selectArm(which: ArmId) {
+		if (which === arm) return
+		arm = which
+		load(which)
+	}
+
+	// A flattering fixed framing of the barista workspace (meters; scene is mm).
+	const cameraPose = {
+		position: [1.6, -1.4, 1.1] as [number, number, number],
+		lookAt: [0.35, -0.2, 0.15] as [number, number, number],
+	}
 </script>
 
-<main style="padding: 2rem">
-	<h1>Homepage Simulated-Arm Demo</h1>
-	<p>motion-tools integration resolves: {ready}</p>
-	<p><a href="/barista">→ /barista</a> (coming soon)</p>
-</main>
+<div class="root">
+	<ViamProvider
+		config={{ defaultOptions: { queries: { staleTime: Infinity } } }}
+		dialConfigs={{}}
+	>
+		<!--
+			ViamAppProvider only satisfies the app-client context that the Visualizer's
+			internal hooks read; with empty credentials and no partID it never connects
+			to app.viam.com. This is a static, client-side replay — no live machine.
+		-->
+		<ViamAppProvider
+			serviceHost="https://app.viam.com"
+			credentials={{ type: 'api-key', payload: '', authEntity: '' }}
+		>
+			<Visualizer {cameraPose} inputBindingsEnabled={false}>
+				{#if trajectory}
+					<TrajectoryPlayer {trajectory} bind:playing />
+				{/if}
+			</Visualizer>
+		</ViamAppProvider>
+	</ViamProvider>
+
+	<div class="overlay">
+		<div class="caption">Same motion code. Different arm.</div>
+
+		<div class="controls">
+			<div class="toggle" role="group" aria-label="Select arm">
+				{#each ARMS as a (a.id)}
+					<button class:active={a.id === arm} disabled={loading} onclick={() => selectArm(a.id)}>
+						{a.label}
+					</button>
+				{/each}
+			</div>
+
+			<button
+				class="brew"
+				disabled={!trajectory || playing || loading}
+				onclick={() => (playing = true)}
+			>
+				{playing ? 'Brewing…' : 'Make coffee'}
+			</button>
+		</div>
+	</div>
+</div>
+
+<style>
+	.root {
+		position: fixed;
+		inset: 0;
+	}
+	.overlay {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		padding: 1.5rem;
+	}
+	.caption {
+		font-size: 1.25rem;
+		font-weight: 600;
+		letter-spacing: 0.01em;
+		color: #f1f5f9;
+		text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+	}
+	.controls {
+		pointer-events: auto;
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+	}
+	.toggle {
+		display: inline-flex;
+		background: rgba(15, 23, 42, 0.7);
+		border: 1px solid rgba(148, 163, 184, 0.3);
+		border-radius: 9999px;
+		padding: 0.25rem;
+		backdrop-filter: blur(8px);
+	}
+	.toggle button {
+		border: 0;
+		background: transparent;
+		color: #cbd5e1;
+		padding: 0.5rem 1.1rem;
+		border-radius: 9999px;
+		cursor: pointer;
+		font-size: 0.95rem;
+	}
+	.toggle button.active {
+		background: #2dd4bf;
+		color: #042f2e;
+		font-weight: 600;
+	}
+	.brew {
+		border: 0;
+		background: #2dd4bf;
+		color: #042f2e;
+		font-weight: 700;
+		padding: 0.6rem 1.4rem;
+		border-radius: 9999px;
+		cursor: pointer;
+		font-size: 1rem;
+	}
+	.brew:disabled {
+		opacity: 0.55;
+		cursor: default;
+	}
+</style>
