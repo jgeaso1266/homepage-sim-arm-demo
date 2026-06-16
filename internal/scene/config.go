@@ -83,6 +83,55 @@ func LoadObstacles(configPath string) (map[string]Obstacle, error) {
 	return obstacles, nil
 }
 
+// LoadToolFrame reads a single named component from the machine config and
+// returns it as an Obstacle (frame transform + geometry). Unlike LoadObstacles
+// it does not filter by parent, so it can read the gripper-attached tool-chain
+// frames (filter, portafilter-handle, coffee-claws-middle) that the frame-system
+// builder mounts on the arm. It errors if the component is missing or has no
+// resolvable frame/geometry.
+func LoadToolFrame(configPath, name string) (Obstacle, error) {
+	raw, err := os.ReadFile(configPath)
+	if err != nil {
+		return Obstacle{}, fmt.Errorf("reading config %s: %w", configPath, err)
+	}
+
+	var cfg config
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		return Obstacle{}, fmt.Errorf("parsing config %s: %w", configPath, err)
+	}
+
+	vars := cfg.variables()
+	for _, comp := range cfg.Components {
+		if comp.Name != name {
+			continue
+		}
+		if comp.Frame == nil {
+			return Obstacle{}, fmt.Errorf("tool frame %q has no frame", name)
+		}
+		fr := comp.Frame
+		geom, ok := resolveGeometry(fr.Geometry, vars, comp.Name)
+		if !ok {
+			return Obstacle{}, fmt.Errorf("tool frame %q has no resolvable geometry", name)
+		}
+		translation, ok := resolveVector(fr.Translation, vars)
+		if !ok {
+			return Obstacle{}, fmt.Errorf("tool frame %q has no resolvable translation", name)
+		}
+		orientation, ok := resolveOrientation(fr.Orientation, vars)
+		if !ok {
+			return Obstacle{}, fmt.Errorf("tool frame %q has no resolvable orientation", name)
+		}
+		return Obstacle{
+			Name:        comp.Name,
+			Parent:      fr.Parent,
+			Translation: translation,
+			Orientation: orientation,
+			Geometry:    geom,
+		}, nil
+	}
+	return Obstacle{}, fmt.Errorf("tool frame %q not found in config", name)
+}
+
 // config is the subset of the machine config the baker reads.
 type config struct {
 	Components []component        `json:"components"`
