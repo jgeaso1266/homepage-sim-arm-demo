@@ -18,6 +18,12 @@ import type { TrackStep } from './types'
  */
 export function applyStep(base: SnapshotProto, step: TrackStep): SnapshotProto {
 	const next = base.clone()
+	// Drop sceneMetadata from playback frames. <Snapshot> re-applies
+	// sceneMetadata.sceneCamera (cameraControls.setPose) on every snapshot change;
+	// since we swap a new snapshot each frame, keeping it would yank the camera
+	// back to the baked pose ~60x/sec and make the scene impossible to orbit
+	// mid-brew. The camera/settings are applied once from the initial scene.
+	next.sceneMetadata = undefined
 	for (const transform of next.transforms) {
 		const pose = step.poses[transform.referenceFrame]
 		const center = transform.physicalObject?.center
