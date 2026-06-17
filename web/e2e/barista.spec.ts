@@ -14,15 +14,15 @@ test.describe('barista arm-swap demo', () => {
 		await brew.click()
 		await expect(page.getByRole('button', { name: /brewing/i })).toBeVisible()
 
-		// The code drawer shows the planning code with the arm model highlighted.
+		// The code drawer shows the motion code with the arm model highlighted.
 		await page.getByRole('button', { name: /show the code/i }).click()
-		await expect(page.locator('pre code')).toContainText('PlanMotion')
-		await expect(page.locator('.hl').first()).toHaveText('xarm6')
+		await expect(page.locator('pre code')).toContainText('motion.move')
+		await expect(page.locator('.hl').first()).toHaveText('ufactory:xArm6')
 
 		// Switching arms loads the other asset and updates the highlighted model.
 		const ur5eAsset = page.waitForResponse(/ur5e\.brew\.json/)
 		await page.getByRole('button', { name: 'UR5e', exact: true }).click()
 		await ur5eAsset
-		await expect(page.locator('.hl').first()).toHaveText('ur5e')
+		await expect(page.locator('.hl').first()).toHaveText('universal-robots:ur5e')
 	})
 })
