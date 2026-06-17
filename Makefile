@@ -1,13 +1,16 @@
-.PHONY: help bake dev build test test-web e2e check
+.PHONY: help install run bake build test test-web e2e check
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
 
-bake: ## Plan both arms and write static trajectory assets (web/static/trajectories)
-	go run ./cmd/bake
+install: ## Install the web app's dependencies (one-time)
+	pnpm -C web install
 
-dev: ## Run the web dev server (http://localhost:5173)
-	pnpm -C web dev
+run: ## Build and serve the demo locally (prints a http://localhost URL)
+	pnpm -C web build && pnpm -C web preview
+
+bake: ## (Optional) re-plan both arms and rewrite the static trajectory assets — needs Go + rdk
+	go run ./cmd/bake
 
 build: ## Build the static web app to web/build
 	pnpm -C web build

@@ -36,18 +36,37 @@ BUILD TIME (Go)                          RUNTIME (browser, static)
   plays; the collapsible code drawer shows the real planning loop with only the
   arm-model name changing.
 
-## Quick start
+## Run it locally
+
+The planned trajectories are committed (under `web/static/trajectories/`), so you
+only need Node to run the demo — no Go, no baking, no server.
+
+**Prerequisites:** Node 22+ and [pnpm](https://pnpm.io/installation).
 
 ```bash
-make bake     # plan both arms → static assets (uses Go + rdk)
-make dev      # run the web app (http://localhost:5173)
+cd web
+pnpm install
+pnpm build && pnpm preview
 ```
 
-For a production-equivalent run:
+`preview` prints a local URL (e.g. `http://localhost:4173`) — open it and the demo
+runs entirely in your browser. Use the **xArm6 / UR5e** toggle and **Make coffee**;
+expand **Show the code** to see the same motion code with only the arm model
+changing.
+
+From the repo root you can also just run `make run` (build + serve), or `make help`
+to list targets.
+
+> The dev server (`pnpm dev`) is not used here — a dependency (`tweakpane`, pulled
+> in by motion-tools) only bundles correctly through the production build, so the
+> demo is run via `build` + `preview`.
+
+### (Optional) regenerate the trajectories
+
+Only needed if you change the brew sequence, arms, or scene. Requires **Go 1.25**:
 
 ```bash
-make build              # build web/build (static)
-pnpm -C web preview     # serve the build
+make bake   # re-plans both arms and rewrites web/static/trajectories/*.json
 ```
 
 ## Tests
