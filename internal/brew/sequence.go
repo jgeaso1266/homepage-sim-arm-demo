@@ -89,7 +89,7 @@ func Sequence() []Step {
 		{Name: "tamper_approach", Pose: tamperApproach, AllowedCollisions: tamper, Label: "Moving to the tamper"},
 		{Name: "tamper_activate", Pose: tamperActivate, Linear: true, AllowedCollisions: tamper, Label: "Tamping", DwellMs: 1500},
 		{Name: "tamper_retract", Pose: tamperApproach, AllowedCollisions: tamper},
-		{Name: "coffee_approach", Pose: coffeeApproach, AllowedCollisions: coffee, Label: "Moving to the machine"},
+		{Name: "coffee_approach", Pose: coffeeApproach, AllowedCollisions: coffee, Label: "Moving to the coffee machine"},
 		{Name: "coffee_in", Pose: coffeeIn, Linear: true, AllowedCollisions: coffee, Label: "Brewing", DwellMs: 2800},
 	}
 }
