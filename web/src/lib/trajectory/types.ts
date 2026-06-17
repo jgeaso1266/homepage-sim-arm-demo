@@ -27,10 +27,19 @@ export interface TrackStep {
 	label?: string
 }
 
+/** A camera framing in meters, for the Visualizer's cameraPose prop. */
+export interface CameraPose {
+	position: [number, number, number]
+	lookAt: [number, number, number]
+}
+
 /** A baked, replayable brew trajectory for one arm. */
 export interface Trajectory {
 	scene: SnapshotProto
 	track: TrackStep[]
+	/** Initial framing extracted from the baked scene (camera stripped from the
+	 * scene so <Snapshot> never re-applies it and reset the user's view). */
+	cameraPose?: CameraPose
 }
 
 /**

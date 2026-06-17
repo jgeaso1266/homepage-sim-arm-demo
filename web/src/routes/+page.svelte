@@ -5,7 +5,7 @@
 
 	import { StaticProvider } from '$lib/trajectory/StaticProvider'
 	import TrajectoryPlayer from '$lib/trajectory/TrajectoryPlayer.svelte'
-	import { ARMS, type ArmId, type Trajectory } from '$lib/trajectory/types'
+	import { ARMS, type ArmId, type CameraPose, type Trajectory } from '$lib/trajectory/types'
 	import CodeDrawer from '$lib/ui/CodeDrawer.svelte'
 
 	const provider = new StaticProvider()
@@ -15,12 +15,17 @@
 	let phase = $state('')
 	let trajectory = $state.raw<Trajectory | undefined>(undefined)
 	let loading = $state(false)
+	// Applied to the Visualizer once (stable reference), so switching arms never
+	// re-frames the camera and the viewer keeps whatever view they orbited to.
+	let cameraPose = $state.raw<CameraPose | undefined>(undefined)
 
 	async function load(which: ArmId) {
 		loading = true
 		playing = false
 		try {
-			trajectory = await provider.load(which)
+			const next = await provider.load(which)
+			cameraPose ??= next.cameraPose
+			trajectory = next
 		} catch (e) {
 			console.error('trajectory load failed', e)
 		} finally {
@@ -48,8 +53,8 @@
 			serviceHost="https://app.viam.com"
 			credentials={{ type: 'api-key', payload: '', authEntity: '' }}
 		>
-			<!-- The baked snapshot carries its own framed SceneCamera. -->
-			<Visualizer inputBindingsEnabled={false}>
+			<!-- Framing comes from the baked scene camera, applied once (see load). -->
+			<Visualizer {cameraPose} inputBindingsEnabled={false}>
 				{#if trajectory}
 					<TrajectoryPlayer {trajectory} bind:playing bind:label={phase} />
 				{/if}
