@@ -53,14 +53,25 @@ func addToolChain(fs *referenceframe.FrameSystem, model referenceframe.Frame, co
 	}
 
 	// gripper: z=105 above the flange. This translation is not in the machine
-	// config; it comes from the beanjamin fragment mod. The gripper carries no
-	// own geometry, so the coffee-claws-middle box is added as a separate child.
+	// config; it comes from the beanjamin fragment mod.
 	gripper, err := referenceframe.NewStaticFrame("gripper", spatialmath.NewPoseFromPoint(r3.Vector{X: 0, Y: 0, Z: 105})) // from beanjamin fragment mod
 	if err != nil {
 		return fmt.Errorf("create gripper frame: %w", err)
 	}
 	if err := fs.AddFrame(gripper, model); err != nil {
 		return fmt.Errorf("add gripper frame: %w", err)
+	}
+
+	// The ufactory gripper's own body geometry — its case and claws — comes from
+	// the gripper module's kinematics, NOT the machine config, so it isn't in the
+	// config export. These two boxes (parent "gripper", local offsets back toward
+	// the flange) fill the otherwise-empty space between the arm flange and the
+	// held portafilter. Dimensions/offsets read from the live Beanjamin viz.
+	if err := addGripperGeometry(fs, gripper, "case-gripper", -50, r3.Vector{X: 50, Y: 100, Z: 100}); err != nil {
+		return err
+	}
+	if err := addGripperGeometry(fs, gripper, "claws", -2.5, r3.Vector{X: 40, Y: 170, Z: 105}); err != nil {
+		return err
 	}
 
 	// Each tool-chain frame's transform + geometry comes straight from the config.
@@ -89,6 +100,27 @@ func addToolChain(fs *referenceframe.FrameSystem, model referenceframe.Frame, co
 		return err
 	}
 	if _, err := addPart(fs, handle, filterFrame); err != nil {
+		return err
+	}
+	return nil
+}
+
+// addGripperGeometry attaches one of the gripper module's body boxes to the
+// gripper frame at local (0, 0, zMM), as a part (so it renders/collides at the
+// right place via addPart's two-frame handling).
+func addGripperGeometry(fs *referenceframe.FrameSystem, gripper referenceframe.Frame, name string, zMM float64, dims r3.Vector) error {
+	box, err := spatialmath.NewBox(spatialmath.NewZeroPose(), dims, name)
+	if err != nil {
+		return fmt.Errorf("create %s geometry: %w", name, err)
+	}
+	part := Obstacle{
+		Name:        name,
+		Parent:      "gripper",
+		Translation: r3.Vector{X: 0, Y: 0, Z: zMM},
+		Orientation: &spatialmath.OrientationVectorDegrees{OZ: 1},
+		Geometry:    box,
+	}
+	if _, err := addPart(fs, part, gripper); err != nil {
 		return err
 	}
 	return nil

@@ -92,8 +92,9 @@ func Sequence() []Step {
 	}
 }
 
-// toolParts are the gripper-mounted frames that legitimately contact a station.
-var toolParts = []string{"filter", "portafilter-handle", "coffee-claws-middle"}
+// toolParts are the gripper-mounted frames that legitimately contact a station
+// (the held portafilter/cup, the coffee claws, and the gripper's own body).
+var toolParts = []string{"filter", "portafilter-handle", "coffee-claws-middle", "case-gripper", "claws"}
 
 // toolVs returns allowed-collision pairs between every tool part and each named
 // station frame, so the tool may contact the station it is acting on.
