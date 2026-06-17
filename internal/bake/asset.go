@@ -27,8 +27,14 @@ var sceneUUID = uuid.MustParse("be4a0000-0000-4000-8000-000000000001")
 // frame system; its links and the gripper-mounted tool frames are what move.
 const armFrameName = "arm"
 
-// tickMs is the spacing between trajectory steps during playback.
-const tickMs = 40
+// brewDurationMs is the wall-clock length of a full brew playback, and brewFrames
+// is how many evenly-spaced frames it's resampled to. The planner samples
+// unevenly (dense at goals, sparse in transit); resampling to even joint-space
+// spacing + uniform per-frame timing yields constant-speed, smooth playback.
+const (
+	brewDurationMs = 6000.0
+	brewFrames     = 180
+)
 
 // Pose is a world-frame pose in motion-tools' common.v1.Pose JSON shape
 // (millimeters + orientation vector degrees), so the web side can feed it
@@ -81,6 +87,10 @@ func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*A
 	if err != nil {
 		return nil, err
 	}
+	// Resample to frames evenly spaced along the joint-space arc, so uniform
+	// per-frame timing plays at a constant speed and tweens smoothly across the
+	// planner's sparse transit gaps (which would otherwise freeze-then-jump).
+	traj = resampleByDistance(traj, armFrameName, brewFrames)
 
 	// Scene snapshot: every geometry (obstacles + arm/tool) at the start pose.
 	// Pin the snapshot UUID so transform identities are stable across re-bakes
@@ -120,10 +130,75 @@ func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*A
 				OX: round(p.GetOX()), OY: round(p.GetOY()), OZ: round(p.GetOZ()), Theta: round(p.GetTheta()),
 			}
 		}
-		track[i] = TrackStep{TMs: i * tickMs, Poses: poses}
+		tMs := 0
+		if len(traj) > 1 {
+			tMs = int(math.Round(float64(i) / float64(len(traj)-1) * brewDurationMs))
+		}
+		track[i] = TrackStep{TMs: tMs, Poses: poses}
 	}
 
 	return &Asset{Scene: snap, Track: track}, nil
+}
+
+// jointDistance is the L2 distance between two arm configurations. Inputs are
+// joint values (radians); referenceframe.Input is an alias for float64.
+func jointDistance(a, b []referenceframe.Input) float64 {
+	sum := 0.0
+	for i := range a {
+		d := a[i] - b[i]
+		sum += d * d
+	}
+	return math.Sqrt(sum)
+}
+
+// resampleByDistance returns numFrames arm configurations spaced evenly along the
+// trajectory's joint-space arc length (linear interpolation within each planned
+// segment). This decouples playback speed from the planner's uneven sampling:
+// with even spacing, uniform per-frame timing renders constant-speed motion.
+func resampleByDistance(traj []referenceframe.FrameSystemInputs, armName string, numFrames int) []referenceframe.FrameSystemInputs {
+	if len(traj) <= 1 || numFrames <= 1 {
+		return traj
+	}
+	cum := make([]float64, len(traj))
+	for i := 1; i < len(traj); i++ {
+		cum[i] = cum[i-1] + jointDistance(traj[i-1][armName], traj[i][armName])
+	}
+	total := cum[len(cum)-1]
+	if total == 0 {
+		return traj
+	}
+
+	out := make([]referenceframe.FrameSystemInputs, numFrames)
+	seg := 0
+	for k := 0; k < numFrames; k++ {
+		target := float64(k) / float64(numFrames-1) * total
+		for seg < len(cum)-2 && cum[seg+1] < target {
+			seg++
+		}
+		segLen := cum[seg+1] - cum[seg]
+		f := 0.0
+		if segLen > 0 {
+			f = (target - cum[seg]) / segLen
+		}
+		out[k] = lerpInputs(traj[seg], traj[seg+1], f, armName)
+	}
+	return out
+}
+
+// lerpInputs linearly interpolates the arm configuration between a and b by f,
+// carrying over the (input-less) static frames unchanged.
+func lerpInputs(a, b referenceframe.FrameSystemInputs, f float64, armName string) referenceframe.FrameSystemInputs {
+	out := referenceframe.FrameSystemInputs{}
+	for k, v := range a {
+		out[k] = v
+	}
+	ja, jb := a[armName], b[armName]
+	arm := make([]referenceframe.Input, len(ja))
+	for i := range ja {
+		arm[i] = ja[i] + (jb[i]-ja[i])*f
+	}
+	out[armName] = arm
+	return out
 }
 
 // toolBases are the gripper-mounted parts that move with the arm. Their geometry
