@@ -31,7 +31,11 @@ token changes when you toggle arms.
 							>{seg.text}</span
 						>{:else}{seg.text}{/if}{/each}</code
 			></pre>
-		<p class="note">Only the highlighted arm model changes. The planning code is identical.</p>
+		<p class="note">
+			Only the highlighted arm model changes — the motion code is identical. Viam plans
+			the path for whichever arm is configured. (Pre-planned here so the demo runs in your
+			browser with no server.)
+		</p>
 	{/if}
 </div>
 

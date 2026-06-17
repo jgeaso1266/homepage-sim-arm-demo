@@ -1,28 +1,30 @@
 import type { ArmId } from '$lib/trajectory/types'
 
 /**
- * The brew-planning code shown in the drawer. It mirrors the real Go baker
- * (internal/brew/plan.go + cmd/bake): the same sequence is planned for whichever
- * arm. `ARM` marks the only thing that differs between the two arms — the
- * kinematics model — so the drawer can highlight it.
+ * Per-arm Viam component model — the ONLY thing that differs between arms. The
+ * drawer highlights it to make "same code, different arm" undeniable.
  */
-const TEMPLATE = `// Plan Beanjamin's espresso routine for the selected arm.
-fs := scene.BuildFrameSystem("arm", "ARM.json", machineConfig)
-inputs := brew.ReadyConfig("ARM")
+const ARM_MODEL: Record<ArmId, string> = {
+	xarm6: 'ufactory:xArm6',
+	ur5e: 'universal-robots:ur5e',
+}
 
-for _, step := range brew.Sequence() {
-    plan, _, err := armplanning.PlanMotion(ctx, logger, &armplanning.PlanRequest{
-        FrameSystem: fs,
-        Goals:       []*PlanState{step.Goal()},
-        StartState:  armplanning.NewPlanState(nil, inputs),
-        Constraints: step.Constraints(),
-    })
-    if err != nil {
-        return err
-    }
-    trajectory = append(trajectory, plan.Trajectory()...)
-    inputs = trajectory.Last()
-}`
+/**
+ * The code shown in the drawer. The story is Viam's hardware abstraction: the arm
+ * is a component you pick in config (the `MODEL` token, the only thing that
+ * changes), and the brew routine calls the Motion service the same way for any
+ * arm. `MODEL` marks the swap point for highlighting.
+ *
+ * Representative, not literal: for a static, serverless web demo the trajectories
+ * are pre-planned with Viam's motion planner (see the note under the drawer);
+ * a live machine would issue these same motion.move() calls at runtime.
+ */
+const TEMPLATE = `# 1 · machine config — the arm is a component you swap
+arm = { "name": "arm", "model": "MODEL" }
+
+# 2 · the brew routine — the same code drives any arm
+for pose in espresso_recipe:          # grinder · tamp · brew
+    await motion.move("arm", pose)`
 
 export interface CodeSegment {
 	text: string
@@ -30,16 +32,17 @@ export interface CodeSegment {
 }
 
 /**
- * Returns the brew code split into segments, with the arm model name marked for
- * highlighting. The arm name is the ONLY thing that changes between arms.
+ * Returns the drawer code split into segments, with the arm model marked for
+ * highlighting. The model is the only thing that changes between arms.
  */
 export function brewCodeSegments(arm: ArmId): CodeSegment[] {
-	const parts = TEMPLATE.split('ARM')
+	const parts = TEMPLATE.split('MODEL')
+	const model = ARM_MODEL[arm]
 	const segments: CodeSegment[] = []
 	parts.forEach((part, i) => {
 		segments.push({ text: part, highlight: false })
 		if (i < parts.length - 1) {
-			segments.push({ text: arm, highlight: true })
+			segments.push({ text: model, highlight: true })
 		}
 	})
 	return segments
