@@ -14,7 +14,6 @@ func TestBrewSequence(t *testing.T) {
 		names[i] = s.Name
 	}
 	test.That(t, names, test.ShouldResemble, []string{
-		"home",
 		"grinder_approach", "grinder_activate", "grinder_retract",
 		"tamper_approach", "tamper_activate", "tamper_retract",
 		"coffee_approach", "coffee_in",

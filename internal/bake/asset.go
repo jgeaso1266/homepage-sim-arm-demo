@@ -101,8 +101,8 @@ func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*A
 	// out to +x/-y), so the embedded view is well-composed without runtime tuning.
 	colors := sceneColors(fs)
 	camera := draw.NewSceneCamera(
-		r3.Vector{X: 2200, Y: -1950, Z: 1500},
-		r3.Vector{X: 360, Y: -180, Z: 520},
+		r3.Vector{X: 1850, Y: -1600, Z: 1200},
+		r3.Vector{X: 340, Y: -120, Z: 180},
 	)
 	snap := draw.NewSnapshot(draw.WithSceneCamera(camera))
 	snap.SetUUID(sceneUUID)

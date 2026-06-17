@@ -48,10 +48,8 @@ func approach(goal spatialmath.Pose) spatialmath.Pose {
 // are taken from the Beanjamin machine config (world frame, mm / ov-degrees);
 // each *_approach is derived as a standoff from its goal, never hardcoded.
 func Sequence() []Step {
-	// home: a comfortable pose above the workspace, tool pointing straight down,
-	// on the +x side away from the camera mast (zoo-cam-obstacle at y=-740).
-	home := ovDeg(350, 0, 300, 0, 0, -1, 0)
-
+	// The arm starts at Beanjamin's real home pose (see brew.ReadyConfig); the
+	// sequence drives straight into the first station from there.
 	grinderActivate := ovDeg(280, -540, 95, 0, -1, 0, -180)
 	tamperActivate := ovDeg(615, -435.7, 112.3, 0.81, -0.59, 0, -180)
 	coffeeIn := ovDeg(689.6, -12.45, 155, 0.66, -0.75, 0, -179)
@@ -80,7 +78,6 @@ func Sequence() []Step {
 	// without the (now disallowed) contact, and without forcing a straight line
 	// through intervening geometry (e.g. tamper-top between the tamper and machine).
 	return []Step{
-		{Name: "home", Pose: home},
 		{Name: "grinder_approach", Pose: grinderApproach, AllowedCollisions: grinder},
 		{Name: "grinder_activate", Pose: grinderActivate, Linear: true, AllowedCollisions: grinder},
 		{Name: "grinder_retract", Pose: grinderApproach, AllowedCollisions: grinder},
