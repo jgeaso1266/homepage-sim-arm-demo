@@ -19,12 +19,13 @@ const ARM_MODEL: Record<ArmId, string> = {
  * are pre-planned with Viam's motion planner (see the note under the drawer);
  * a live machine would issue these same motion.move() calls at runtime.
  */
-const TEMPLATE = `# 1 · machine config — the arm is a component you swap
-arm = { "name": "arm", "model": "MODEL" }
+const TEMPLATE = `# machine config — the arm is a component; swap the model, nothing else
+{ "name": "arm", "model": "MODEL" }
 
-# 2 · the brew routine — the same code drives any arm
+# application code — identical for every arm
+arm = Arm.get_resource_name("arm")
 for pose in espresso_recipe:          # grinder · tamp · brew
-    await motion.move("arm", pose)`
+    await motion.move(arm, pose)`
 
 export interface CodeSegment {
 	text: string
