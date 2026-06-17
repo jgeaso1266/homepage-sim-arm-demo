@@ -126,18 +126,31 @@ func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*A
 	return &Asset{Scene: snap, Track: track}, nil
 }
 
-// Moving geometries are the arm's own links (named "arm:arm:<link>") and the
-// gripper-mounted tool frames (named by their bare frame name). isMoving matches
-// the transform ReferenceFrame against both forms.
-var movingToolFrames = map[string]bool{
-	"filter":              true,
-	"portafilter-handle":  true,
-	"coffee-claws-middle": true,
+// toolBases are the gripper-mounted parts that move with the arm. Their geometry
+// is emitted on a "<base>:geometry" child frame (see scene.addPart), so the
+// rendered transform's referenceFrame is "<base>:geometry:<base>". "gripper" is a
+// pure (geometry-less) mount frame, listed for color completeness.
+var toolBases = []string{
+	"gripper", "filter", "portafilter-handle", "coffee-claws-middle", "case-gripper", "claws",
 }
 
-func isMoving(referenceFrame string) bool {
-	return strings.HasPrefix(referenceFrame, armFrameName+":") || movingToolFrames[referenceFrame]
+// isArmOrTool reports whether a name belongs to the moving robot — the arm model
+// chain or a gripper-mounted part. It works for both bare frame names ("filter",
+// "filter:geometry") and emitted transform referenceFrames ("filter:geometry:filter",
+// "arm:arm:upper_arm"), since every such name is the base or "<base>:…".
+func isArmOrTool(name string) bool {
+	if name == armFrameName || strings.HasPrefix(name, armFrameName+":") {
+		return true
+	}
+	for _, b := range toolBases {
+		if name == b || strings.HasPrefix(name, b+":") {
+			return true
+		}
+	}
+	return false
 }
+
+func isMoving(referenceFrame string) bool { return isArmOrTool(referenceFrame) }
 
 // round quantizes a pose component to 0.01mm / 0.01°, well below visual
 // resolution, so sub-micron planner jitter doesn't churn the committed assets.
@@ -149,10 +162,8 @@ func sceneColors(fs *referenceframe.FrameSystem) map[string]draw.Color {
 	scene := draw.ColorFromHex("#94A3B8") // slate — the workspace
 	colors := make(map[string]draw.Color)
 	for _, name := range fs.FrameNames() {
-		// Source the tool-frame set from movingToolFrames so the color map can't
-		// drift from isMoving. "gripper" is a pure (geometry-less) frame, included
-		// here for completeness.
-		if name == armFrameName || name == "gripper" || movingToolFrames[name] {
+		// Same predicate as the track's isMoving, so color and motion never drift.
+		if isArmOrTool(name) {
 			colors[name] = arm
 		} else {
 			colors[name] = scene
