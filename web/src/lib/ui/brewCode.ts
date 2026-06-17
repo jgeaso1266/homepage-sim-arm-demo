@@ -5,8 +5,8 @@ import type { ArmId } from '$lib/trajectory/types'
  * drawer highlights it to make "same code, different arm" undeniable.
  */
 const ARM_MODEL: Record<ArmId, string> = {
-	xarm6: 'ufactory:xArm6',
-	ur5e: 'universal-robots:ur5e',
+	xarm6: 'viam:ufactory:xArm6',
+	ur5e: 'viam:universal-robots:ur5e',
 }
 
 /**
@@ -20,7 +20,11 @@ const ARM_MODEL: Record<ArmId, string> = {
  * a live machine would issue these same motion.move() calls at runtime.
  */
 const TEMPLATE = `# machine config — the arm is a component; swap the model, nothing else
-{ "name": "arm", "model": "MODEL" }
+{
+  "name": "arm",
+  "api": "rdk:component:arm",
+  "model": "MODEL"
+}
 
 # application code — identical for every arm
 arm = Arm.get_resource_name("arm")
