@@ -69,7 +69,7 @@ func addToolChain(fs *referenceframe.FrameSystem, model referenceframe.Frame, co
 	if err != nil {
 		return err
 	}
-	if err := addToolFrame(fs, claws, gripper); err != nil {
+	if _, err := addPart(fs, claws, gripper); err != nil {
 		return err
 	}
 
@@ -78,36 +78,53 @@ func addToolChain(fs *referenceframe.FrameSystem, model referenceframe.Frame, co
 	if err != nil {
 		return err
 	}
-	filterFrame, err := frameFor(filter)
+	filterFrame, err := addPart(fs, filter, gripper)
 	if err != nil {
 		return err
 	}
-	if err := fs.AddFrame(filterFrame, gripper); err != nil {
-		return fmt.Errorf("add filter frame: %w", err)
-	}
 
-	// portafilter-handle: box hanging below the filter (parent filter).
+	// portafilter-handle: box hanging below the filter (parent the filter frame).
 	handle, err := LoadToolFrame(configPath, "portafilter-handle")
 	if err != nil {
 		return err
 	}
-	if err := addToolFrame(fs, handle, filterFrame); err != nil {
+	if _, err := addPart(fs, handle, filterFrame); err != nil {
 		return err
 	}
 	return nil
 }
 
-// addToolFrame builds a static frame with geometry for a tool-chain obstacle and
-// attaches it under parent.
-func addToolFrame(fs *referenceframe.FrameSystem, o Obstacle, parent referenceframe.Frame) error {
-	f, err := frameFor(o)
+// geomFrameSuffix names the child frame that carries a part's geometry.
+const geomFrameSuffix = ":geometry"
+
+// addPart adds a config part (obstacle or tool frame) as TWO frames under parent:
+//
+//   - a transform frame named o.Name carrying the part's pose — this is the
+//     kinematic node children attach to (and, for the filter, the planning target);
+//   - a zero-offset child frame "o.Name:geometry" carrying the geometry.
+//
+// rdk positions a static frame's own geometry at the frame's PARENT, not at the
+// frame itself (the link convention: a frame's transform moves its children, not
+// its own geometry). Attaching the geometry to a zero-offset child therefore
+// renders/collides it at o.Name's true world position. The geometry keeps its
+// o.Name label, so the emitted transform's referenceFrame is unchanged. Returns
+// the transform frame so callers can parent children to it.
+func addPart(fs *referenceframe.FrameSystem, o Obstacle, parent referenceframe.Frame) (referenceframe.Frame, error) {
+	tf, err := referenceframe.NewStaticFrame(o.Name, spatialmath.NewPose(o.Translation, o.Orientation))
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("create %s frame: %w", o.Name, err)
 	}
-	if err := fs.AddFrame(f, parent); err != nil {
-		return fmt.Errorf("add %s frame: %w", o.Name, err)
+	if err := fs.AddFrame(tf, parent); err != nil {
+		return nil, fmt.Errorf("add %s frame: %w", o.Name, err)
 	}
-	return nil
+	gf, err := referenceframe.NewStaticFrameWithGeometry(o.Name+geomFrameSuffix, spatialmath.NewZeroPose(), o.Geometry)
+	if err != nil {
+		return nil, fmt.Errorf("create %s geometry frame: %w", o.Name, err)
+	}
+	if err := fs.AddFrame(gf, tf); err != nil {
+		return nil, fmt.Errorf("add %s geometry frame: %w", o.Name, err)
+	}
+	return tf, nil
 }
 
 // peripheralCollisionExclusions are real config obstacles that sit outside the
@@ -123,6 +140,11 @@ var peripheralCollisionExclusions = map[string]bool{
 	"speaker-obstacle":     true,
 	"stream-deck-obstacle": true,
 	"empty-cup":            true,
+	// Bounds that are useful on the real machine but visually intrusive and
+	// unnecessary for this short tabletop brew (the stations are all low): the
+	// ceiling is a slab at z=900 and the wall a 2x2m plane behind the arm.
+	"ceiling": true,
+	"wall":    true,
 }
 
 // addObstacles attaches every world-scene obstacle from the config in an order
@@ -153,11 +175,7 @@ func addObstacles(fs *referenceframe.FrameSystem, configPath string) error {
 			if parent == nil {
 				continue // parent not yet present; try again next pass
 			}
-			f, err := frameFor(o)
-			if err != nil {
-				return err
-			}
-			if err := fs.AddFrame(f, parent); err != nil {
+			if _, err := addPart(fs, o, parent); err != nil {
 				return fmt.Errorf("add obstacle %s: %w", name, err)
 			}
 			added[name] = true
@@ -180,11 +198,3 @@ func addObstacles(fs *referenceframe.FrameSystem, configPath string) error {
 
 // frameFor builds a static frame carrying the obstacle's geometry, posed at its
 // translation + orientation relative to its parent.
-func frameFor(o Obstacle) (referenceframe.Frame, error) {
-	pose := spatialmath.NewPose(o.Translation, o.Orientation)
-	f, err := referenceframe.NewStaticFrameWithGeometry(o.Name, pose, o.Geometry)
-	if err != nil {
-		return nil, fmt.Errorf("create %s frame: %w", o.Name, err)
-	}
-	return f, nil
-}

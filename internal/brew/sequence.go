@@ -69,13 +69,25 @@ func Sequence() []Step {
 		"coffee-machine-buffer-left", "coffee-machine-buffer-right",
 	)
 
+	grinderApproach := approach(grinderActivate)
+	tamperApproach := approach(tamperActivate)
+	coffeeApproach := approach(coffeeIn)
+
+	// Pattern per station: free move to the standoff approach, a straight (linear)
+	// drive-in to the activate pose, then a retract back to the standoff before the
+	// next free cross-move. The retract is essential — it lifts the tool clear of
+	// the station it was touching so the planner can route to the next station
+	// without the (now disallowed) contact, and without forcing a straight line
+	// through intervening geometry (e.g. tamper-top between the tamper and machine).
 	return []Step{
 		{Name: "home", Pose: home},
-		{Name: "grinder_approach", Pose: approach(grinderActivate), AllowedCollisions: grinder},
-		{Name: "grinder_activate", Pose: grinderActivate, AllowedCollisions: grinder},
-		{Name: "tamper_approach", Pose: approach(tamperActivate), AllowedCollisions: tamper},
-		{Name: "tamper_activate", Pose: tamperActivate, AllowedCollisions: tamper},
-		{Name: "coffee_approach", Pose: approach(coffeeIn), Linear: true, AllowedCollisions: coffee},
+		{Name: "grinder_approach", Pose: grinderApproach, AllowedCollisions: grinder},
+		{Name: "grinder_activate", Pose: grinderActivate, Linear: true, AllowedCollisions: grinder},
+		{Name: "grinder_retract", Pose: grinderApproach, AllowedCollisions: grinder},
+		{Name: "tamper_approach", Pose: tamperApproach, AllowedCollisions: tamper},
+		{Name: "tamper_activate", Pose: tamperActivate, Linear: true, AllowedCollisions: tamper},
+		{Name: "tamper_retract", Pose: tamperApproach, AllowedCollisions: tamper},
+		{Name: "coffee_approach", Pose: coffeeApproach, AllowedCollisions: coffee},
 		{Name: "coffee_in", Pose: coffeeIn, Linear: true, AllowedCollisions: coffee},
 	}
 }

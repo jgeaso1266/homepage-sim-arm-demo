@@ -55,7 +55,8 @@ func TestBuildAsset(t *testing.T) {
 		if strings.HasPrefix(tf.GetReferenceFrame(), "arm:") {
 			hasArm = true
 		}
-		if tf.GetReferenceFrame() == "coffee-machine-base" {
+		// Parts emit their geometry on a "<name>:geometry" child frame.
+		if strings.HasPrefix(tf.GetReferenceFrame(), "coffee-machine-base") {
 			hasObstacle = true
 		}
 	}

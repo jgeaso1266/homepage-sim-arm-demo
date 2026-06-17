@@ -14,13 +14,15 @@ func TestBrewSequence(t *testing.T) {
 		names[i] = s.Name
 	}
 	test.That(t, names, test.ShouldResemble, []string{
-		"home", "grinder_approach", "grinder_activate",
-		"tamper_approach", "tamper_activate",
+		"home",
+		"grinder_approach", "grinder_activate", "grinder_retract",
+		"tamper_approach", "tamper_activate", "tamper_retract",
 		"coffee_approach", "coffee_in",
 	})
 
-	// coffee_in absolute pose from config.
-	ci := seq[6]
+	// coffee_in absolute pose from config (final step).
+	ci := seq[len(seq)-1]
+	test.That(t, ci.Name, test.ShouldEqual, "coffee_in")
 	test.That(t, ci.Pose.Point().X, test.ShouldAlmostEqual, 689.6)
 
 	// grinder_approach is derived as a standoff from grinder_activate: its point
@@ -38,10 +40,13 @@ func TestBrewSequence(t *testing.T) {
 	standoff := activate.Pose.Point().Sub(approach.Pose.Point()).Norm()
 	test.That(t, standoff, test.ShouldAlmostEqual, 80.0)
 
-	// coffee_approach is a linear move.
+	// The straight drive-in (coffee_in) is linear; its approach is a free move.
 	for _, s := range seq {
-		if s.Name == "coffee_approach" {
+		switch s.Name {
+		case "coffee_in":
 			test.That(t, s.Linear, test.ShouldBeTrue)
+		case "coffee_approach":
+			test.That(t, s.Linear, test.ShouldBeFalse)
 		}
 	}
 }
