@@ -21,10 +21,17 @@ const (
 	planRandomSeed = 7
 )
 
-// PlanSequence plans the full brew sequence into a single concatenated joint
-// trajectory. It mirrors beanjamin's moveToRawPose: each step plans a motion of
-// the tool frame to the step's world-frame goal, starting from where the
-// previous step ended, and the per-step trajectories are stitched together.
+// PlannedStep is one brew step paired with the joint trajectory planned for it.
+type PlannedStep struct {
+	Step Step
+	Traj []referenceframe.FrameSystemInputs
+}
+
+// PlanSequence plans each brew step into its own joint trajectory, in order. It
+// mirrors beanjamin's moveToRawPose: each step plans a motion of the tool frame
+// to the step's world-frame goal, starting from where the previous step ended.
+// Returning per-step (rather than one concatenated trajectory) lets the baker
+// time, label, and dwell each step independently.
 //
 // Linear steps get a LinearConstraint so the tool drives in a straight line.
 func PlanSequence(
@@ -34,10 +41,10 @@ func PlanSequence(
 	armName, toolFrame string,
 	startInputs referenceframe.FrameSystemInputs,
 	steps []Step,
-) ([]referenceframe.FrameSystemInputs, error) {
+) ([]PlannedStep, error) {
 	prevInputs := startInputs
 
-	var trajectory []referenceframe.FrameSystemInputs
+	planned := make([]PlannedStep, 0, len(steps))
 	for _, step := range steps {
 		var constraints *motionplan.Constraints
 		if step.Linear || len(step.AllowedCollisions) > 0 {
@@ -93,9 +100,9 @@ func PlanSequence(
 			return nil, fmt.Errorf("plan step %q returned an empty trajectory", step.Name)
 		}
 
-		trajectory = append(trajectory, stepTraj...)
+		planned = append(planned, PlannedStep{Step: step, Traj: stepTraj})
 		prevInputs = stepTraj[len(stepTraj)-1]
 	}
 
-	return trajectory, nil
+	return planned, nil
 }

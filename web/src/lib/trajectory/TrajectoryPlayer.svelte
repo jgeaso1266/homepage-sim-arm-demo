@@ -15,10 +15,12 @@ each step's world poses are applied to a clone of the scene snapshot, which
 	interface Props {
 		trajectory: Trajectory
 		playing: boolean
+		/** Sign-post text for the current playback frame ('' when idle/none). */
+		label?: string
 		ondone?: () => void
 	}
 
-	let { trajectory, playing = $bindable(), ondone }: Props = $props()
+	let { trajectory, playing = $bindable(), label = $bindable(''), ondone }: Props = $props()
 
 	let current = $state.raw(trajectory.scene)
 	let raf = 0
@@ -31,6 +33,7 @@ each step's world poses are applied to a clone of the scene snapshot, which
 	$effect(() => {
 		void trajectory
 		current = trajectory.scene
+		label = ''
 	})
 
 	function stop() {
@@ -47,10 +50,12 @@ each step's world poses are applied to a clone of the scene snapshot, which
 		let i = 0
 		while (i + 1 < track.length && track[i + 1].tMs <= elapsed) i++
 		current = applyStep(trajectory.scene, track[i])
+		label = track[i].label ?? ''
 
 		if (elapsed >= durationMs) {
 			stop()
 			playing = false
+			label = ''
 			ondone?.()
 			return
 		}

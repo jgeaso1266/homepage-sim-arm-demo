@@ -13,8 +13,7 @@ import (
 
 // TestPlanSequence_bothArms is the real reachability gate: it builds the
 // obstacle-aware planning frame system for each candidate arm and plans the full
-// brew sequence end-to-end, asserting a non-empty trajectory longer than the
-// step list (every step contributes at least one trajectory entry).
+// brew sequence end-to-end, asserting every step planned a non-empty trajectory.
 func TestPlanSequence_bothArms(t *testing.T) {
 	for _, arm := range []string{"xarm6", "ur5e"} {
 		fs, err := scene.BuildFrameSystem(
@@ -29,8 +28,11 @@ func TestPlanSequence_bothArms(t *testing.T) {
 		start := referenceframe.NewZeroInputs(fs)
 		start["arm"] = cfg
 
-		traj, err := PlanSequence(context.Background(), logging.NewTestLogger(t), fs, "arm", "filter", start, Sequence())
+		planned, err := PlanSequence(context.Background(), logging.NewTestLogger(t), fs, "arm", "filter", start, Sequence())
 		test.That(t, err, test.ShouldBeNil)
-		test.That(t, len(traj), test.ShouldBeGreaterThan, len(Sequence()))
+		test.That(t, len(planned), test.ShouldEqual, len(Sequence()))
+		for _, ps := range planned {
+			test.That(t, len(ps.Traj), test.ShouldBeGreaterThan, 0)
+		}
 	}
 }

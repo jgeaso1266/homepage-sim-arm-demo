@@ -23,11 +23,16 @@ type AllowedCollision struct {
 // Step is one named goal in the brew sequence. Pose is the world-frame target
 // for the tool ("filter") frame. Linear requests a straight-line move.
 // AllowedCollisions lists frame pairs that may overlap for this step only.
+// Label is the sign-post text shown while this step plays (empty = no sign).
+// DwellMs holds the arm at the step's goal for that many ms (the robot "doing
+// something" — grinding, tamping, brewing); 0 = no hold.
 type Step struct {
 	Name              string
 	Pose              spatialmath.Pose
 	Linear            bool
 	AllowedCollisions []AllowedCollision
+	Label             string
+	DwellMs           int
 }
 
 // ovDeg builds a pose from a point (mm) and an orientation vector in degrees.
@@ -78,14 +83,14 @@ func Sequence() []Step {
 	// without the (now disallowed) contact, and without forcing a straight line
 	// through intervening geometry (e.g. tamper-top between the tamper and machine).
 	return []Step{
-		{Name: "grinder_approach", Pose: grinderApproach, AllowedCollisions: grinder},
-		{Name: "grinder_activate", Pose: grinderActivate, Linear: true, AllowedCollisions: grinder},
+		{Name: "grinder_approach", Pose: grinderApproach, AllowedCollisions: grinder, Label: "Moving to the grinder"},
+		{Name: "grinder_activate", Pose: grinderActivate, Linear: true, AllowedCollisions: grinder, Label: "Grinding", DwellMs: 1800},
 		{Name: "grinder_retract", Pose: grinderApproach, AllowedCollisions: grinder},
-		{Name: "tamper_approach", Pose: tamperApproach, AllowedCollisions: tamper},
-		{Name: "tamper_activate", Pose: tamperActivate, Linear: true, AllowedCollisions: tamper},
+		{Name: "tamper_approach", Pose: tamperApproach, AllowedCollisions: tamper, Label: "Moving to the tamper"},
+		{Name: "tamper_activate", Pose: tamperActivate, Linear: true, AllowedCollisions: tamper, Label: "Tamping", DwellMs: 1500},
 		{Name: "tamper_retract", Pose: tamperApproach, AllowedCollisions: tamper},
-		{Name: "coffee_approach", Pose: coffeeApproach, AllowedCollisions: coffee},
-		{Name: "coffee_in", Pose: coffeeIn, Linear: true, AllowedCollisions: coffee},
+		{Name: "coffee_approach", Pose: coffeeApproach, AllowedCollisions: coffee, Label: "Moving to the machine"},
+		{Name: "coffee_in", Pose: coffeeIn, Linear: true, AllowedCollisions: coffee, Label: "Brewing", DwellMs: 2800},
 	}
 }
 

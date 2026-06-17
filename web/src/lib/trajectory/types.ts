@@ -23,6 +23,8 @@ export interface PoseJson {
 export interface TrackStep {
 	tMs: number
 	poses: Record<string, PoseJson>
+	/** Sign-post text shown while this frame plays (e.g. "Grinding"); may be absent. */
+	label?: string
 }
 
 /** A baked, replayable brew trajectory for one arm. */

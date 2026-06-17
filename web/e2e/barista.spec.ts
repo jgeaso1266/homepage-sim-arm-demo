@@ -14,6 +14,11 @@ test.describe('barista arm-swap demo', () => {
 		await brew.click()
 		await expect(page.getByRole('button', { name: /brewing/i })).toBeVisible()
 
+		// The sign-post announces each phase as the arm works through the stations.
+		await expect(page.locator('.signpost')).toContainText(/grinding|tamping|brewing|moving/i, {
+			timeout: 15_000,
+		})
+
 		// The code drawer shows the motion code with the arm model highlighted.
 		await page.getByRole('button', { name: /show the code/i }).click()
 		await expect(page.locator('pre code')).toContainText('motion.move')

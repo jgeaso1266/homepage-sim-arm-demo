@@ -27,13 +27,14 @@ var sceneUUID = uuid.MustParse("be4a0000-0000-4000-8000-000000000001")
 // frame system; its links and the gripper-mounted tool frames are what move.
 const armFrameName = "arm"
 
-// brewDurationMs is the wall-clock length of a full brew playback, and brewFrames
-// is how many evenly-spaced frames it's resampled to. The planner samples
-// unevenly (dense at goals, sparse in transit); resampling to even joint-space
-// spacing + uniform per-frame timing yields constant-speed, smooth playback.
+// Playback timing. The planner samples unevenly (dense at goals, sparse in
+// transit); resampling each step to even joint-space spacing and giving every
+// motion frame the same duration yields constant-speed, smooth motion. Station
+// dwells (Step.DwellMs) then hold the pose so the arm visibly "works".
 const (
-	brewDurationMs = 6000.0
-	brewFrames     = 180
+	motionDurationMs = 6500.0 // total time spent moving across the whole brew
+	motionFrames     = 200    // motion frames distributed across that time, by distance
+	dwellFps         = 12.0   // frames per second held during a dwell
 )
 
 // Pose is a world-frame pose in motion-tools' common.v1.Pose JSON shape
@@ -51,9 +52,11 @@ type Pose struct {
 
 // TrackStep is one playback frame: the world pose of every moving entity, keyed
 // by the entity's "<frame>:<geometryLabel>" name (matching the scene snapshot).
+// Label is the sign-post text to show while this frame plays (empty = no sign).
 type TrackStep struct {
 	TMs   int             `json:"tMs"`
 	Poses map[string]Pose `json:"poses"`
+	Label string          `json:"label,omitempty"`
 }
 
 // Asset is the full replay payload for one arm.
@@ -83,22 +86,20 @@ func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*A
 	start := referenceframe.NewZeroInputs(fs)
 	start[armFrameName] = cfg
 
-	traj, err := brew.PlanSequence(ctx, logger, fs, armFrameName, "filter", start, brew.Sequence())
+	planned, err := brew.PlanSequence(ctx, logger, fs, armFrameName, "filter", start, brew.Sequence())
 	if err != nil {
 		return nil, err
 	}
-	// Resample to frames evenly spaced along the joint-space arc, so uniform
-	// per-frame timing plays at a constant speed and tweens smoothly across the
-	// planner's sparse transit gaps (which would otherwise freeze-then-jump).
-	traj = resampleByDistance(traj, armFrameName, brewFrames)
+	if len(planned) == 0 {
+		return nil, &unknownArmError{arm}
+	}
 
 	// Scene snapshot: every geometry (obstacles + arm/tool) at the start pose.
 	// Pin the snapshot UUID so transform identities are stable across re-bakes
 	// (DrawFrameSystemGeometries derives every transform UUID from it); otherwise a
 	// fresh random UUID would churn every entity id on each run. (Track poses are
 	// rounded but may still differ sub-micron between bakes — that's expected.)
-	// Bake a camera framed on the workspace (arm at origin; grinder/tamper/machine
-	// out to +x/-y), so the embedded view is well-composed without runtime tuning.
+	// Bake a camera framed on the workspace so the embedded view is well-composed.
 	colors := sceneColors(fs)
 	camera := draw.NewSceneCamera(
 		r3.Vector{X: 1850, Y: -1600, Z: 1200},
@@ -106,38 +107,90 @@ func (b Baker) Build(ctx context.Context, logger logging.Logger, arm string) (*A
 	)
 	snap := draw.NewSnapshot(draw.WithSceneCamera(camera))
 	snap.SetUUID(sceneUUID)
-	if err := snap.DrawFrameSystemGeometries(fs, traj[0], colors); err != nil {
+	if err := snap.DrawFrameSystemGeometries(fs, planned[0].Traj[0], colors); err != nil {
 		return nil, err
 	}
 
-	// Track: per step, the world pose of each moving (arm/tool) geometry.
-	track := make([]TrackStep, len(traj))
-	for i, inputs := range traj {
-		transforms, err := draw.NewDrawnFrameSystem(fs, inputs).ToTransforms()
-		if err != nil {
-			return nil, err
-		}
-		poses := make(map[string]Pose)
-		for _, t := range transforms {
-			if !isMoving(t.GetReferenceFrame()) {
-				continue
+	// Total joint motion, used to allocate motion frames per step by distance so
+	// the arm moves at a constant speed regardless of the planner's uneven sampling.
+	totalDist := 0.0
+	for _, ps := range planned {
+		totalDist += pathLen(ps.Traj, armFrameName)
+	}
+
+	msPerFrame := motionDurationMs / motionFrames
+	var track []TrackStep
+	tMs := 0.0
+	for _, ps := range planned {
+		// Resample this step to a frame count proportional to its distance, then
+		// give each motion frame the same duration — constant speed across steps.
+		n := 2
+		if totalDist > 0 {
+			if c := int(math.Round(motionFrames * pathLen(ps.Traj, armFrameName) / totalDist)); c > n {
+				n = c
 			}
-			// The scene's observer frame is World, so each geometry's world pose
-			// lives in its center (PhysicalObject), not PoseInObserverFrame.
-			p := t.GetPhysicalObject().GetCenter()
-			poses[t.GetReferenceFrame()] = Pose{
-				X: round(p.GetX()), Y: round(p.GetY()), Z: round(p.GetZ()),
-				OX: round(p.GetOX()), OY: round(p.GetOY()), OZ: round(p.GetOZ()), Theta: round(p.GetTheta()),
+		}
+		frames := resampleByDistance(ps.Traj, armFrameName, n)
+		for _, inputs := range frames {
+			poses, err := posesAt(fs, inputs)
+			if err != nil {
+				return nil, err
+			}
+			track = append(track, TrackStep{TMs: int(math.Round(tMs)), Poses: poses, Label: ps.Step.Label})
+			tMs += msPerFrame
+		}
+
+		// Dwell: hold the step's final pose so the arm visibly "works" (grinding,
+		// tamping, brewing) while the sign-post shows the action.
+		if ps.Step.DwellMs > 0 {
+			poses, err := posesAt(fs, frames[len(frames)-1])
+			if err != nil {
+				return nil, err
+			}
+			nd := int(math.Round(float64(ps.Step.DwellMs) / 1000.0 * dwellFps))
+			if nd < 1 {
+				nd = 1
+			}
+			for k := 0; k < nd; k++ {
+				tMs += float64(ps.Step.DwellMs) / float64(nd)
+				track = append(track, TrackStep{TMs: int(math.Round(tMs)), Poses: poses, Label: ps.Step.Label})
 			}
 		}
-		tMs := 0
-		if len(traj) > 1 {
-			tMs = int(math.Round(float64(i) / float64(len(traj)-1) * brewDurationMs))
-		}
-		track[i] = TrackStep{TMs: tMs, Poses: poses}
 	}
 
 	return &Asset{Scene: snap, Track: track}, nil
+}
+
+// pathLen is the total joint-space distance traversed by a step's trajectory.
+func pathLen(traj []referenceframe.FrameSystemInputs, armName string) float64 {
+	total := 0.0
+	for i := 1; i < len(traj); i++ {
+		total += jointDistance(traj[i-1][armName], traj[i][armName])
+	}
+	return total
+}
+
+// posesAt returns the world pose of every moving (arm/tool) geometry at the given
+// joint configuration, keyed by transform reference frame (matching the scene).
+func posesAt(fs *referenceframe.FrameSystem, inputs referenceframe.FrameSystemInputs) (map[string]Pose, error) {
+	transforms, err := draw.NewDrawnFrameSystem(fs, inputs).ToTransforms()
+	if err != nil {
+		return nil, err
+	}
+	poses := make(map[string]Pose)
+	for _, t := range transforms {
+		if !isMoving(t.GetReferenceFrame()) {
+			continue
+		}
+		// The scene's observer frame is World, so each geometry's world pose lives
+		// in its center (PhysicalObject), not PoseInObserverFrame.
+		p := t.GetPhysicalObject().GetCenter()
+		poses[t.GetReferenceFrame()] = Pose{
+			X: round(p.GetX()), Y: round(p.GetY()), Z: round(p.GetZ()),
+			OX: round(p.GetOX()), OY: round(p.GetOY()), OZ: round(p.GetOZ()), Theta: round(p.GetTheta()),
+		}
+	}
+	return poses, nil
 }
 
 // jointDistance is the L2 distance between two arm configurations. Inputs are
